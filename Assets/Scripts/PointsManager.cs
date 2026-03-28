@@ -30,8 +30,7 @@ public class PointsManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        if (!string.IsNullOrEmpty(CurrentUsername))
-            LoadPoints(CurrentUsername);
+        LoadPoints(CurrentUsername);
     }
 
     // Class needed for the persistence of Username and Points between different sessions
@@ -77,11 +76,6 @@ public class PointsManager : MonoBehaviour
 
     public void LoadPoints(string username)
     {
-        if (string.IsNullOrEmpty(username))
-        {
-            Debug.LogWarning("LoadPoints called with an empty username. Skipping load.");
-            return;
-        }
         string path = Application.persistentDataPath + $"/savefile_{username}.json";
 
         if (File.Exists(path))
@@ -97,6 +91,7 @@ public class PointsManager : MonoBehaviour
             Character = data.SelectedHelper;
             PlayerPrefs.SetInt("selectedCharacter", Character); /////////////
             charSel.selectedCharacter = Character;
+
         }
         else
         {
