@@ -1,0 +1,516 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\begin{document}
+
+\section*{Adaptive VR Rehabilitation System}
+
+\subsection*{Revised Task Distribution and System Architecture Proposal}
+
+
+\hrule
+
+
+\subsection*{1. Introduction}
+
+
+This document proposes an updated division of work and system architecture for the development of the \textbf{Adaptive VR Rehabilitation System for Upper-Limb Recovery Post-Stroke}.
+
+
+The revision improves:
+
+\begin{itemize}
+\item workload balance between team members
+\item alignment with individual academic tracks
+\item technical depth of the project
+\item inclusion of a data-driven adaptive component
+\end{itemize}
+
+\hrule
+
+
+\subsection*{2. System Overview}
+
+
+The system is designed as a \textbf{closed-loop adaptive rehabilitation platform}, where user performance continuously influences task difficulty.
+
+
+\subsubsection*{Core Workflow}
+
+
+User performs task -> movement is tracked -> trajectory is processed -> performance features are extracted -> data is stored -> adaptive model evaluates performance -> system adjusts difficulty
+
+
+\hrule
+
+
+\subsection*{3. Key Design Principles}
+
+
+\begin{itemize}
+\item Separation between \textbf{raw data acquisition} and \textbf{data interpretation}
+\item Use of \textbf{standardized performance metrics across tasks}
+\item Adoption of a \textbf{data-driven adaptive system}, extending the original rule-based approach
+\item Modular architecture: Unity (interaction \& signal processing) + Backend (data \& intelligence)
+\end{itemize}
+
+\hrule
+
+
+\subsection*{4. Revised Division of Work}
+
+
+\subsubsection*{4.1 Shared Responsibilities}
+
+
+Both students collaborate on:
+
+
+\begin{itemize}
+\item Design and implementation of VR environments:
+\begin{itemize}
+\item Kitchen scene
+\item Living room scene
+\item Garden scene
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item Development of rehabilitation tasks:
+\begin{itemize}
+\item Watering plants
+\item Picking objects
+\item Hanging tools
+\item Cleaning / manipulation tasks
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item Definition of difficulty parameters:
+\begin{itemize}
+\item target size
+\item reach distance
+\item task complexity
+\item visual guidance
+\end{itemize}
+\end{itemize}
+
+\begin{itemize}
+\item System testing and usability validation
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{4.2 Mechatronics / Software (Student A)}
+
+
+Responsible for \textbf{interaction systems and raw data acquisition}
+
+
+\paragraph*{Motion Tracking}
+
+\begin{itemize}
+\item Capture hand/controller position and movement (3D coordinates)
+\item Store trajectory temporarily during task execution
+\item Manage tracking lifecycle:
+\begin{itemize}
+\item start tracking
+\item update tracking
+\item stop tracking
+\end{itemize}
+\end{itemize}
+
+\paragraph*{Interaction System}
+
+\begin{itemize}
+\item Configure and standardize \textbf{SDK-based} reusable interaction components across tasks:
+\begin{itemize}
+\item grab / release
+\item place (snapping, validation)
+\item pour (thresholds, spill logic)
+\item cut
+\item task-specific rules, edge cases, and telemetry around SDK events
+\end{itemize}
+\end{itemize}
+
+\paragraph*{Event Detection}
+
+\begin{itemize}
+\item Detect and log:
+\begin{itemize}
+\item task start / completion
+\item errors
+\item prompts / guidance usage
+\end{itemize}
+\end{itemize}
+
+\paragraph*{Unity Integration}
+
+\begin{itemize}
+\item Integrate tracking and interaction systems within VR scenes
+\item Ensure stable and responsive real-time behavior
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{4.3 AI \& Data Analysis (Student B)}
+
+
+Responsible for \textbf{performance modeling, data pipeline, and adaptive intelligence}
+
+
+\paragraph*{Performance Modeling (Core Contribution)}
+
+Define quantitative metrics derived from movement data:
+
+
+\begin{itemize}
+\item normalized completion time (task + difficulty based)
+\item error count
+\item prompt usage
+\item path efficiency
+\item movement smoothness
+\item hesitation / pauses
+\item accuracy
+\end{itemize}
+
+\paragraph*{Feature Extraction Logic}
+
+\begin{itemize}
+\item Design mathematical formulas for all metrics
+\item Collaborate on implementation within Unity
+\item Ensure consistency across tasks and sessions
+\end{itemize}
+
+\paragraph*{Data Architecture}
+
+\begin{itemize}
+\item Design relational database schema (PostgreSQL / Supabase)
+\item Structure entities:
+\begin{itemize}
+\item patients (anonymized)
+\item sessions
+\item tasks
+\item performance metrics
+\item adaptation decisions
+\end{itemize}
+\end{itemize}
+
+\paragraph*{Backend System}
+
+\begin{itemize}
+\item Develop API for:
+\begin{itemize}
+\item receiving performance data from Unity
+\item storing structured data
+\item returning adaptive decisions
+\end{itemize}
+\end{itemize}
+
+\paragraph*{Adaptive System}
+
+
+\textbf{Phase 1: Rule-Based Baseline}
+
+\begin{itemize}
+\item Define initial decision rules:
+\begin{itemize}
+\item high performance -> increase difficulty
+\item moderate -> maintain
+\item low -> decrease
+\end{itemize}
+\end{itemize}
+
+\textbf{Phase 2: Data-Driven Model}
+
+\begin{itemize}
+\item Train machine learning model on collected data
+\item Input: performance features
+\item Output: difficulty adjustment decision
+\end{itemize}
+
+\paragraph*{Data Analysis \& Evaluation}
+
+\begin{itemize}
+\item Analyze user performance trends
+\item Compare:
+\begin{itemize}
+\item rule-based vs machine learning approach
+\end{itemize}
+\item Evaluate system effectiveness and adaptability
+\end{itemize}
+
+\hrule
+
+
+\subsection*{5. Movement Tracking and Feature Extraction Methodology}
+
+
+The system performs \textbf{trajectory-based motion analysis} to derive meaningful performance metrics from raw movement data.
+
+
+\subsubsection*{5.1 Trajectory Acquisition}
+
+
+\begin{itemize}
+\item Raw 3D positions are recorded during task execution
+\item Data is stored temporarily in memory within Unity
+\item No per-frame data is directly stored in the database
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{5.2 Trajectory Preprocessing}
+
+
+To improve signal quality:
+
+
+\begin{itemize}
+\item \textbf{Downsampling} is applied to reduce redundant points
+\item \textbf{Smoothing techniques} (e.g., moving average or low-pass filtering) are used to reduce noise and jitter
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{5.3 Ideal Path Definition}
+
+
+For each task, an expected trajectory is defined:
+
+
+\begin{itemize}
+\item simple tasks -> straight-line path from start to target
+\item multi-step tasks -> sequence of target checkpoints
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{5.4 Feature Computation}
+
+
+The following metrics are computed from the processed trajectory:
+
+
+\paragraph*{Path Efficiency}
+
+Ratio between optimal path and actual path:
+
+
+efficiency = straight-line distance / actual path length
+
+
+\hrule
+
+
+\paragraph*{Deviation from Ideal Path}
+
+\begin{itemize}
+\item Average distance between actual trajectory and ideal path
+\item Measures spatial accuracy of movement
+\end{itemize}
+
+\hrule
+
+
+\paragraph*{Movement Smoothness}
+
+Derived from kinematic properties:
+
+
+\begin{itemize}
+\item velocity variation
+\item acceleration changes
+\item optional jerk approximation
+\end{itemize}
+
+Smooth movement corresponds to low variability in motion
+
+
+\hrule
+
+
+\paragraph*{Speed Metrics}
+
+\begin{itemize}
+\item average speed
+\item peak speed
+\end{itemize}
+
+\hrule
+
+
+\paragraph*{Hesitation Detection}
+
+\begin{itemize}
+\item number and duration of pauses
+\item based on velocity thresholds
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{5.5 Data Storage Strategy}
+
+
+Only \textbf{aggregated features} are stored in the database:
+
+
+\begin{itemize}
+\item completion time
+\item efficiency
+\item smoothness
+\item errors
+\item prompts
+\item accuracy
+\item hesitation (pause count, total pause duration)
+\end{itemize}
+
+Optional:
+
+\begin{itemize}
+\item raw trajectory may be stored separately (e.g., JSON or file storage) for offline analysis
+\end{itemize}
+
+\hrule
+
+
+\subsubsection*{5.6 Rationale}
+
+
+This approach:
+
+
+\begin{itemize}
+\item avoids storing large volumes of raw coordinate data
+\item ensures efficient database usage
+\item provides ML-ready structured features
+\item aligns with signal processing and motion analysis principles
+\end{itemize}
+
+\hrule
+
+
+\subsection*{6. System Architecture}
+
+
+\subsubsection*{Unity (VR Layer)}
+
+\begin{itemize}
+\item task execution
+\item motion tracking
+\item trajectory preprocessing
+\item feature computation
+\end{itemize}
+
+down
+
+
+\subsubsection*{Backend (API Layer)}
+
+\begin{itemize}
+\item receives feature data
+\item stores data in database
+\item runs adaptive model inference
+\end{itemize}
+
+down
+
+
+\subsubsection*{Database (PostgreSQL / Supabase)}
+
+\begin{itemize}
+\item stores structured performance data
+\end{itemize}
+
+down
+
+
+\subsubsection*{Machine Learning Pipeline (Offline)}
+
+\begin{itemize}
+\item model training using collected dataset
+\item deployment for runtime inference
+\end{itemize}
+
+\hrule
+
+
+\subsection*{7. Adaptive Decision Process}
+
+
+At runtime:
+
+
+\begin{enumerate}
+\item Unity computes performance features
+\item Features are sent to backend
+\item Backend evaluates:
+\begin{itemize}
+\item rule-based logic or trained model
+\end{itemize}
+\item Backend returns decision:
+\begin{itemize}
+\item increase difficulty
+\item maintain
+\item decrease
+\end{itemize}
+\item Unity updates task parameters accordingly
+\end{enumerate}
+
+\hrule
+
+
+\subsection*{8. Improvements Over Original Proposal}
+
+
+Compared to the initial project definition:
+
+
+\begin{itemize}
+\item VR development is now \textbf{shared}, improving workload balance
+\item The tracking system is extended into a \textbf{full motion analysis pipeline}
+\item The adaptive system evolves from \textbf{rule-based to data-driven}
+\item A complete \textbf{machine learning component} is introduced
+\item The system becomes a \textbf{closed-loop adaptive system}
+\end{itemize}
+
+\hrule
+
+
+\subsection*{9. Work Requirements}
+
+
+\begin{itemize}
+\item Organized file structure in GitHub and Git LFS
+\item Agreed versioning across plugins and applications
+\item Efficient organization and consistency across previous and newly developed systems
+\end{itemize}
+
+\subsection*{10. Conclusion}
+
+
+This revised structure ensures:
+
+
+\begin{itemize}
+\item balanced distribution of workload
+\item clear separation of responsibilities
+\item strong alignment with academic tracks
+\item enhanced technical and research value
+\end{itemize}
+
+The project evolves from a VR application with tracking into a \textbf{data-driven adaptive rehabilitation system}, integrating motion analysis, performance modeling, and intelligent difficulty adaptation.
+
+
+
+
+\end{document}
+
+

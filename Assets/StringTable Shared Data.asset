@@ -1,0 +1,301 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: StringTable Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: StringTable
+  m_TableCollectionNameGuidString: f28b81cd50761834ba1c489e4cae2022
+  m_Entries:
+  - m_Id: 359189513945088
+    m_Key: localeKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15466676224
+    m_Key: welcomeKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 454956702416896
+    m_Key: helpKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 455177670934528
+    m_Key: yesKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1821029464981504
+    m_Key: charSelectKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2917999210315776
+    m_Key: task01Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2996685154467840
+    m_Key: victoryKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2997274374488064
+    m_Key: continueKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2998040191483904
+    m_Key: quitKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 20653746548043776
+    m_Key: clipboardKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 28029456270946304
+    m_Key: winKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35281752365133824
+    m_Key: languageKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35283318497275904
+    m_Key: langKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35297609157898240
+    m_Key: helperKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116307870609408
+    m_Key: Task01Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116575936966656
+    m_Key: Task02Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116777192255488
+    m_Key: Task03Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117002959056896
+    m_Key: Task04Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117146123235328
+    m_Key: Task05Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117364529033216
+    m_Key: Task06Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117493126393856
+    m_Key: GoodJobKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39601379803066368
+    m_Key: levelSelectKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39602542573187072
+    m_Key: kitchenLvlKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39603541060808704
+    m_Key: normalKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39603710896566272
+    m_Key: hardKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39604019874164736
+    m_Key: withTipsKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39604267912720384
+    m_Key: withoutTipsKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39615849686298624
+    m_Key: difficultySelectKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39845230123872256
+    m_Key: helperSelectKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44343447024758784
+    m_Key: gameSaveSelectKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44343866643902464
+    m_Key: newGameKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44344047175135232
+    m_Key: savedGameKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46515330184835072
+    m_Key: usernameKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46520638080741376
+    m_Key: saveDataKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 53626583944458240
+    m_Key: choiceKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55103769704591360
+    m_Key: rightArnKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55103913330143232
+    m_Key: leftArmKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55104083870543872
+    m_Key: armKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55543678508658688
+    m_Key: environmentKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55544335043063808
+    m_Key: simpleKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55544482552541184
+    m_Key: detailedKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55547917712683008
+    m_Key: noneKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55550057118101504
+    m_Key: backKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55811134359793664
+    m_Key: armExplanationKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55812115361361920
+    m_Key: envExplanationKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55814168829685760
+    m_Key: helperExplanationKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 63753283869011968
+    m_Key: levelTwoClipboardKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 63880719684268032
+    m_Key: coffeeLvlKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64839866022031360
+    m_Key: WelcomeCoffeeKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840159707197440
+    m_Key: Coffee01Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840314007252992
+    m_Key: Coffee02Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840496107155456
+    m_Key: Coffee03Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840856930545664
+    m_Key: Coffee04Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840985775370240
+    m_Key: Coffee05Key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 72117449625366528
+    m_Key: WhatDoKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 72121579135758336
+    m_Key: BackToMenuKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77310699189497856
+    m_Key: livingRoomObjectivesKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77625558712119296
+    m_Key: whichLevelKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77625928762978304
+    m_Key: livingRoomKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78306396881743872
+    m_Key: welcomeLivingRoomKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78306842220359680
+    m_Key: wipeTaskKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307112752967680
+    m_Key: vacuumTaskKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307446606983168
+    m_Key: vacuumCleanTaskKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307779332730880
+    m_Key: deskTidyTaskKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270040133300224
+    m_Key: SprayObjectiveKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270397378949120
+    m_Key: SpongeObjectiveKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270608616681472
+    m_Key: DustObjectiveKey
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270747565584384
+    m_Key: PaperObjectiveKey
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 7458027438363639832
+  references:
+    version: 2
+    RefIds:
+    - rid: 7458027438363639832
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables,
+        asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1729504499120

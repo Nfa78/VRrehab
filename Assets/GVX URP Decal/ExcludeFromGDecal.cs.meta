@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 604bccbd8065c734f85cfaf68e9f842a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 194864
+  packageName: G URP Decals
+  packageVersion: 1.1.0
+  assetPath: Assets/GVX URP Decal/ExcludeFromGDecal.cs
+  uploadId: 467848

@@ -1,0 +1,358 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: StringTable_it
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: it
+  m_SharedData: {fileID: 11400000, guid: f28b81cd50761834ba1c489e4cae2022, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 15466676224
+    m_Localized: "Benvenuto! Ti aiuter\xF2 a raggiungere i tuoi obiettivi. Per prima
+      cosa, prendi la padella dal cassetto davanti a te ed appoggiala sul fornello."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 359189513945088
+    m_Localized: 'Scegli la lingua:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 454956702416896
+    m_Localized: Hai bisogno di aiuto?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 455177670934528
+    m_Localized: "S\xEC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1821029464981504
+    m_Localized: "Scegli chi ti aiuter\xE0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2917999210315776
+    m_Localized: Prima di tutto, prova ad appendere uno di quei cappelli su un gancio.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2996685154467840
+    m_Localized: Ben fatto!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2997274374488064
+    m_Localized: Prossimo esercizio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2998040191483904
+    m_Localized: Esci dall'applicazione
+    m_Metadata:
+      m_Items: []
+  - m_Id: 20653746548043776
+    m_Localized: 'Prendi la padella e mettila sul fornello
+
+      Prendi la carota
+      e mettila sul tagliere
+
+      Prendi il coltello e taglia la carota in almeno
+      15 pezzi
+
+      Metti almeno 10 pezzi in padella
+
+      Accendi il fornello
+
+      Mescola
+
+      Spegni
+      il fornello'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 28029456270946304
+    m_Localized: Missione compiuta!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35281752365133824
+    m_Localized: Lingua
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35283318497275904
+    m_Localized: Italiano
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35297609157898240
+    m_Localized: 'Aiutante:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116307870609408
+    m_Localized: Ora, prendi la carota e mettila sopra il tagliere.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116575936966656
+    m_Localized: Prendi il coltello dal cassetto e taglia la carota in fettine sottili.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116777192255488
+    m_Localized: Metti le fette di carota che hai appena tagliato in padella.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117002959056896
+    m_Localized: Ora accendi il fornello girando la manopola.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117146123235328
+    m_Localized: Prendi il cucchiaio di legno e mescola le carote per non farle bruciare.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117364529033216
+    m_Localized: Infine, spegni il fornello.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117493126393856
+    m_Localized: Ottimo lavoro! Ce l'hai fatta!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39601379803066368
+    m_Localized: Scegli un livello
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39602542573187072
+    m_Localized: Cucina
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39603541060808704
+    m_Localized: Normale
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39603710896566272
+    m_Localized: Difficile
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39604019874164736
+    m_Localized: (Con suggerimenti)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39604267912720384
+    m_Localized: (No suggerimenti)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39615849686298624
+    m_Localized: "Seleziona la difficolt\xE0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39845230123872256
+    m_Localized: 'Scegli il tuo aiutante:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44343447024758784
+    m_Localized: Vuoi iniziare una nuova partita?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44343866643902464
+    m_Localized: Nuova partita
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44344047175135232
+    m_Localized: Partita salvata
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46515330184835072
+    m_Localized: 'Nome:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46520638080741376
+    m_Localized: 'Seleziona il tuo nome:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 53626583944458240
+    m_Localized: Vuoi andare al prossimo esercizio o preferisci fermarti per oggi?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55103769704591360
+    m_Localized: Destro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55103913330143232
+    m_Localized: Sinistro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55104083870543872
+    m_Localized: 'Braccio:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55543678508658688
+    m_Localized: 'Ambiente:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55544335043063808
+    m_Localized: Essenziale
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55544482552541184
+    m_Localized: Dettagliato
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55547917712683008
+    m_Localized: Nessuno
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55550057118101504
+    m_Localized: Indietro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55811134359793664
+    m_Localized: "Il braccio che dovresti utilizzare per completare i livelli; puoi
+      anche usare l'altro braccio (ad esempio il tuo braccio sinistro se avevi scelto
+      il destro e viceversa), per\xF2 non riceverai punti."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55812115361361920
+    m_Localized: "Puoi scegliere un ambiente pi\xF9 semplice, con meno distrazioni
+      per poterti concentrare di pi\xF9, oppure un ambiente pi\xF9 dettagliato, per
+      aumentare il senso di realismo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55814168829685760
+    m_Localized: "Puoi scegliere un aiutante virtuale che ti guidi passo per passo
+      in ciascun livello. Se scegli di non avere un aiutante non riceverai alcun
+      consiglio per completare i livelli, quindi questa opzione \xE8 consigliata
+      solo se hai gi\xE0 completato i livelli, per aggiungere una difficolt\xE0 aggiuntiva
+      ed ottenere i trofei."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 63753283869011968
+    m_Localized: 'Tira su la leva della macchinetta
+
+      Prendi una capsula dal
+      contenitore e mettila nella macchinetta
+
+      Prendi un piattino dalla credenza
+      e mettilo sotto l''erogatore
+
+      Prendi una tazzina dalla credenza e mettila
+      sul piattino
+
+      Premi il bottone per erogare il caffe'''
+    m_Metadata:
+      m_Items: []
+  - m_Id: 63880719684268032
+    m_Localized: "Caff\xE8"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64839866022031360
+    m_Localized: "Ciao! Per fare il caff\xE8, per prima cosa solleva la leva della
+      macchinetta."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840159707197440
+    m_Localized: Ora, rimuovi il coperchio del contenitore e prendi una capsula.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840314007252992
+    m_Localized: Metti la capsula nella macchinetta, poi abbassa la leva.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840496107155456
+    m_Localized: Apri le ante della credenza e prendi un piattino, per appoggiarlo
+      sotto l'erogatore.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840856930545664
+    m_Localized: Prendi una tazzina e mettila sul piattino.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840985775370240
+    m_Localized: "Infine, premi uno dei bottoni sulla macchinetta per erogare il
+      caff\xE8."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 72117449625366528
+    m_Localized: Cosa vuoi fare?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 72121579135758336
+    m_Localized: Torna al menu' iniziale
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77625558712119296
+    m_Localized: Quale livello vuoi fare?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77625928762978304
+    m_Localized: Salotto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77310699189497856
+    m_Localized: 'Spruzza le macchie sul vetro
+
+      (Macchie spruzzate: 0/10)
+
+      Togli
+      le macchie con la spugnetta
+
+      (Macchie eliminate: 0/10)
+
+      Rimuovi
+      la polvere con l''aspirapolvere
+
+      (Polvere rimossa: 0/10)
+
+      Butta
+      le cartacce nel bidone (Cartacce buttate: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78306396881743872
+    m_Localized: "Ciao! Il vetro \xE8 un po' sporco. Per pulirlo, prendi lo spruzzino
+      e spruzza tutte le macchie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78306842220359680
+    m_Localized: Ora prendi la spugna e passala su tutte le macchie per eliminarle.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307112752967680
+    m_Localized: Perfetto! Anche il pavimento ha bisogno di una pulita, quindi prendi
+      l'aspirapolvere e clicca il bottone per accenderlo.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307446606983168
+    m_Localized: Passa l'aspirapolvere su tutti i cumuli di polvere per rimuoverli.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307779332730880
+    m_Localized: 'Molto bene! Infine, ripuliamo la scrivania: raccogli tutte le cartacce
+      e buttale nel cestino.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270040133300224
+    m_Localized: 'Spruzza le macchie sul vetro
+
+      (Macchie spruzzate: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270397378949120
+    m_Localized: 'Togli le macchie con la spugnetta
+
+      (Macchie eliminate: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270608616681472
+    m_Localized: 'Rimuovi la polvere con l''aspirapolvere
+
+      (Polvere rimossa:
+      0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270747565584384
+    m_Localized: 'Butta le cartacce nel bidone (Cartacce buttate: 0/10)'
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

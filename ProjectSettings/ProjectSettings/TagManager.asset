@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 3
+  tags:
+  - Cupboard
+  - Drawer
+  - VictoryCanvas
+  - Box
+  - Knife
+  - Sliceable
+  - Pan
+  - Carrot
+  - Spoon
+  - Oil
+  - Spice
+  - QDSUISharedThemeColor
+  - QDSUISection
+  - QDSUIIcon
+  - QDSUIToggleBorderlessButton
+  - QDSUITooltip
+  - QDSUITextSecondaryColor
+  - QDSUISecondaryButton
+  - QDSUIBorderlessButton
+  - QDSUIToggleButton
+  - QDSUIToggleCheckboxRadio
+  - QDSUIPrimaryButton
+  - QDSUIAccentColor
+  - QDSUIDestructiveButton
+  - QDSUIToggleSwitch
+  - QDSUITextInputField
+  - CoffeeCapsule
+  - Plate
+  - Cup
+  - PaintableWall
+  - Paint
+  - QDSUITextSecondaryInvertedColor
+  - QDSUITextInvertedColor
+  - QDSUIBackplateGradient
+  - Locomotion
+  - LocoButton
+  - LocoText
+  - PassThroughButton
+  - PassThrough
+  - SamplesInfoPanel
+  - Sponge
+  - Vacuum
+  - Paper
+  - JarLid
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - Sliceable
+  - Water
+  - UI
+  - Hand
+  - CarrotPieces
+  - JarLidSnap
+  - Overlay UI
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - OVROverlayCanvas Rendering
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Tips Layer
+    uniqueID: 386155703
+    locked: 0
+  m_RenderingLayers:
+  - Default
+  - Light Layer 1
+  - Light Layer 2
+  - Light Layer 3
+  - Light Layer 4
+  - Light Layer 5
+  - Light Layer 6
+  - Light Layer 7

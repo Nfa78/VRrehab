@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97269afb30aa84742ae3f3342603618a, type: 3}
+  m_Name: AudioTable_en 1
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 349851d13ee561c4db54a208a7099924, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 2556986265104384
+    m_Localized: 76da1cfb64857f644b9606991a3896a6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3252823173558272
+    m_Localized: a9124bff17f18ff4a8978052d13ff3f8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3273429629726720
+    m_Localized: 4b74edf9504809c46889d1379d536fee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3279933757911040
+    m_Localized: c16a731c8b3b8c8429eb8335ee33d573
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280077857419264
+    m_Localized: cf0aea44482f9ec42a61c7052067b83c
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280172803878912
+    m_Localized: 718d094285cb25442ad19652a8b68818
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280266726928384
+    m_Localized: f6a64dd8b8226ed4bac06b6e58a8de0d
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280363552436224
+    m_Localized: e61f329fe2ff12a4881130575216d59f
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280453457342464
+    m_Localized: 960835962dc6ca440b5f6ffd2732d500
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280687570808832
+    m_Localized: 44031f49ecebc2d4cb256e6bcc3abcf4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280731602612224
+    m_Localized: 597337d52517e8346981dfd117d1b4a3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280762812428288
+    m_Localized: 7489f0268d99f724f9b6170f85fabb90
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280789962158080
+    m_Localized: 7a03eb694ed3114499b1a133cb886066
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280816495325184
+    m_Localized: cd04cf374b0c0134d9fca735e657fafc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280849672269824
+    m_Localized: 7e6139b53a99a6541abcf32cc8485e79
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26097915189981184
+    m_Localized: 1041b9edcd75587459835317b9ece449
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26098252374274048
+    m_Localized: d022058deee3d3942906087b258eeef3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26098411309035520
+    m_Localized: ac5d9512ec57cd748820839a51eab5f7
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26098525482184704
+    m_Localized: 1dddcda84d2664e41943077387a11c1c
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26132260353142784
+    m_Localized: 884da53bd95eef74f8e4f60de5281a0c
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26132448509620224
+    m_Localized: d7262b2221179694894ae0f1d5f120e6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305199298375680
+    m_Localized: 26ca810ecc4332e42ad99d5e7a3591ef
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305351002157056
+    m_Localized: 9f3f4a54ca2748e428fe2053533004c6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305464722321408
+    m_Localized: 045dcf99ee8eb8f4fa3b9d5bcdf81d5f
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305533013979136
+    m_Localized: fa4178e71e43bad47901a0304415f560
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305604430393344
+    m_Localized: ad19ff28c963abf46834bebcfbb4d9fa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305689457324032
+    m_Localized: a7f2c0fe5425cd041a2194fc08b4d907
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306413763293184
+    m_Localized: 317062645d137e849a5127c0a95ead62
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306495984234496
+    m_Localized: a61e85c24ce5c1a4cbe9d0a61893839a
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306588816764928
+    m_Localized: 1d68439e3f5c308468a90bf384a45031
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306653497126912
+    m_Localized: adb96e703d98986439bf9078a95c24a8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306707880472576
+    m_Localized: ce0b8640943b3c84091421ad387b0bca
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306754529521664
+    m_Localized: 5bb89e71a6c9be845a30fbe8f7fd1780
+    m_Metadata:
+      m_Items: []
+  - m_Id: 281423135567872
+    m_Localized: 78642acadba2c844597158b743410708
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778631981789184
+    m_Localized: a2d028a39def5c04d967f1cc0f01126d
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778698193072128
+    m_Localized: 776994931d175c74c8a58558d850a047
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778809899970560
+    m_Localized: d1146b08528412440870b2ad1d5f3a48
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778913994207232
+    m_Localized: b06df7e9b7a670b4b9532519f8960634
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779044445450240
+    m_Localized: e7789d232b054ed429c71a62ea2c89b0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779561728962560
+    m_Localized: 9554f42da00ca7b4ab7996bfa7c86a83
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779647166935040
+    m_Localized: bd11d852e0d2b904e8fa4c28c31ffc61
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779738829254656
+    m_Localized: 0204f029b0964744c8c1c41552eb9502
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779804889542656
+    m_Localized: 1f583648fe8a9744aab4adedb7e328c3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779870035472384
+    m_Localized: 9793596ca44ed3e49ad04c89ff8a2092
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

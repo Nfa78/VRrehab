@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/NewStarterMenu.unity
+    guid: a3863309db3b73b48a5d620385ee64af
+  - enabled: 1
+    path: Assets/Scenes/ApartmentScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/SecondLevel.unity
+    guid: 7b8e0a7f2d3c4a04a82901ebed9e80e2
+  - enabled: 1
+    path: Assets/Scenes/TestScene.unity
+    guid: cf7361cc020dc2349b5c054217cbd101
+  - enabled: 0
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/76.0.0/Example Scenes/HandGrabUseExamples.unity"
+    guid: 509f8fa80c708b343a603a4771d35c85
+  - enabled: 0
+    path: Assets/Samples/XR Hands/1.5.0/Gestures/HandGestures.unity
+    guid: cd792f2302b8b6f4c9f264e2a4503e15
+  - enabled: 0
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/76.0.0/Example Scenes/GestureExamples.unity"
+    guid: 4ee2a082a0e621b49ab01667c66f1599
+  - enabled: 0
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/76.0.0/Example Scenes/HandGrabExamples.unity"
+    guid: 39ae0e546b9edc0408d3b11c6a7c2814
+  - enabled: 0
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/76.0.0/Feature Scenes/UseGrabPressure.unity"
+    guid: 7e42218241842f94cb568988a6037516
+  - enabled: 0
+    path: Assets/Scenes/ThirdLevel.unity
+    guid: 695c1eab5d135f44f9b5f97da3521847
+  - enabled: 0
+    path: Assets/Scenes/HandGrabTest.unity
+    guid: b0012d8266c0ff441bd2add072d0111b
+  - enabled: 0
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/76.0.0/Example Scenes/SnapExamples.unity"
+    guid: 01ca63189b69e00488487d660224a315
+  - enabled: 0
+    path: "Assets/Samples/Meta XR Interaction \u200BSDK/76.0.0/Example Scenes/TransformerExamples.unity"
+    guid: 7475942f60c376744ba1ec487d140105
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 8afc87d180f6cdc47a6be335bafff860,
+      type: 2}
+    com.unity.adaptiveperformance.google.android.provider_settings: {fileID: 11400000,
+      guid: d995f4289151e344c80fd0596ddb69b8, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 562ebc426ebc2ca4cb5186db207d095a,
+      type: 2}
+    com.unity.adaptiveperformance.samsung.android.provider_settings: {fileID: 11400000,
+      guid: db5924384e769964cb24ce30820971a6, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
+      guid: 517d52cd99b7dcd45aed7fc425a085a2, type: 2}
+    com.unity.addressableassets: {fileID: 11400000, guid: ce434542347833646926971b72073feb,
+      type: 2}
+    com.unity.localization.settings: {fileID: 11400000, guid: db0180613bd306d4f88a1e4ea0c01867,
+      type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 0b34713f144ca724a9e81c287d31e4dd,
+      type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: e770c14b71eb4224382a851c64177170,
+      type: 2}
+  m_UseUCBPForAssetBundles: 0

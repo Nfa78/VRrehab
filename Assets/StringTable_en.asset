@@ -1,0 +1,359 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: StringTable_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: f28b81cd50761834ba1c489e4cae2022, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 15466676224
+    m_Localized: Welcome! I will help you with your tasks. Begin by taking out the
+      pan from the drawer in front of you and placing it on the stove.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 359189513945088
+    m_Localized: 'Choose the language:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 454956702416896
+    m_Localized: Do you need help?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 455177670934528
+    m_Localized: Yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1821029464981504
+    m_Localized: Choose who will help you
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2917999210315776
+    m_Localized: First of all, try to hang one of those hats on a hook.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2996685154467840
+    m_Localized: Well done!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2997274374488064
+    m_Localized: Next exercise
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2998040191483904
+    m_Localized: Quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 20653746548043776
+    m_Localized: 'Take out the pan and place it on the stove
+
+      Take out the
+      carrot and place it on the cutting board
+
+      Pick up the knife and slice
+      the carrot into 15 pieces
+
+      Place at least 10 carrot pieces inside the
+      pan
+
+      Turn on the stove
+
+      Stir
+
+      Turn off the stove'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 28029456270946304
+    m_Localized: Congratulations, you did it!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35281752365133824
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35283318497275904
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 35297609157898240
+    m_Localized: 'Helper:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116307870609408
+    m_Localized: Now, take the carrot and place it on the cutting board.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116575936966656
+    m_Localized: Retrieve the knife from the drawer and slice the carrot into thin
+      slices.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38116777192255488
+    m_Localized: Now pick up the slices you just cut and put them inside the pan.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117002959056896
+    m_Localized: Turn on the stove by twisting the knob.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117146123235328
+    m_Localized: Now take the wooden spoon and stir the carrots so they don't burn.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117364529033216
+    m_Localized: Lastly, turn the stove off.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 38117493126393856
+    m_Localized: Good job! You did it!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39601379803066368
+    m_Localized: Select a level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39602542573187072
+    m_Localized: Kitchen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39603541060808704
+    m_Localized: Normal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39603710896566272
+    m_Localized: Hard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39604019874164736
+    m_Localized: (With tips)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39604267912720384
+    m_Localized: (Without tips)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39615849686298624
+    m_Localized: Select the difficulty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 39845230123872256
+    m_Localized: 'Choose your helper:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44343447024758784
+    m_Localized: Do you want to start a new game?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44343866643902464
+    m_Localized: New game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44344047175135232
+    m_Localized: Saved game
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46515330184835072
+    m_Localized: 'Name:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46520638080741376
+    m_Localized: 'Select your name:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 53626583944458240
+    m_Localized: Do you want to go to the next exercise or would you rather stop
+      for today?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55103769704591360
+    m_Localized: Right
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55103913330143232
+    m_Localized: Left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55104083870543872
+    m_Localized: 'Arm:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55543678508658688
+    m_Localized: 'Environment:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55544335043063808
+    m_Localized: Essential
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55544482552541184
+    m_Localized: Detailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55547917712683008
+    m_Localized: None
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55550057118101504
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55811134359793664
+    m_Localized: The arm you should use to complete the levels; you can also use
+      your other arm (e.g., your left arm if you chose right and vice versa), but
+      in that case you won't get any points.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55812115361361920
+    m_Localized: You can choose between a simple environment, with less distractions
+      to help you focus, or a more detailed environment, to increase realism and
+      visual interest.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55814168829685760
+    m_Localized: You can choose a virtual helper to guide you through each level
+      step by step. If you choose to have no helper you will get no hints to complete
+      the level, so this option is recommended only if you have already mastered
+      the levels, to add an extra challenge and get the expert trophies.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 63753283869011968
+    m_Localized: 'Pull up the coffee machine''s lever
+
+      Take a capsule from
+      the container and put it in the machine
+
+      Take a saucer from the cupboard
+      and put it under the dispenser
+
+      Take a cup from the cupboard and put
+      it on the saucer
+
+      Press the button to make coffee'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 63880719684268032
+    m_Localized: Coffee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64839866022031360
+    m_Localized: Hello! To make coffee, the first thing is to pull up the coffee
+      machine's lever.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840159707197440
+    m_Localized: Now, remove the lid from the jar and take a capsule.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840314007252992
+    m_Localized: Put the capsule in the machine, then pull the lever down.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840496107155456
+    m_Localized: Open the cupboard's doors and take a saucer, then place it under
+      the dispenser.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840856930545664
+    m_Localized: Take a cup and place it on the saucer.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 64840985775370240
+    m_Localized: Lastly, press one of the buttons on the machine to dispense the
+      coffee.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 72117449625366528
+    m_Localized: What do you want to do?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 72121579135758336
+    m_Localized: Back to the menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77625558712119296
+    m_Localized: Which level do you want to do?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77625928762978304
+    m_Localized: Living room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 77310699189497856
+    m_Localized: 'Spray the spots on the window
+
+      (Sprayed spots: 0/10)
+
+      Remove
+      the spots with the sponge
+
+      (Removed spots: 0/10)
+
+      Remove the dust
+      with the vacuum cleaner
+
+      (Removed dust: 0/10)
+
+      Throw the paper
+      in the bin (Thrown paper: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78306396881743872
+    m_Localized: Hello! The window is a bit dirty. To clean it, grab the spray bottle
+      and spray all of the spots.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78306842220359680
+    m_Localized: Now, grab the sponge and wipe the window in order to eliminate the
+      spots.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307112752967680
+    m_Localized: Perfect! The floor needs some cleaning as well, so take the vacuum
+      cleaner and push the button to turn it on.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307446606983168
+    m_Localized: Vacuum the floor in order to remove all of the dust.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 78307779332730880
+    m_Localized: 'Very good! Lastly, let''s tidy up the desk: grab all of the crumpled
+      paper balls and throw them in the bin.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270040133300224
+    m_Localized: 'Spray the spots on the window
+
+      (Sprayed spots: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270397378949120
+    m_Localized: 'Remove the spots with the sponge
+
+      (Removed spots: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270608616681472
+    m_Localized: 'Remove the dust with the vacuum cleaner
+
+      (Removed dust: 0/10)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 81270747565584384
+    m_Localized: 'Throw the paper in the bin (Thrown paper: 0/10)'
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

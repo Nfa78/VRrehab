@@ -1,0 +1,287 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Localization-Assets-English (en)
+  m_EditorClassIdentifier: 
+  m_GroupName: Localization-Assets-English (en)
+  m_GUID: fd5f053c591742f40bee1a7b0c498e06
+  m_SerializeEntries:
+  - m_GUID: 0204f029b0964744c8c1c41552eb9502
+    m_Address: clean_02_woman_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 045dcf99ee8eb8f4fa3b9d5bcdf81d5f
+    m_Address: coffee_02_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1041b9edcd75587459835317b9ece449
+    m_Address: audio_man_eng_wrong_arm
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d68439e3f5c308468a90bf384a45031
+    m_Address: coffee_02_wom_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1dddcda84d2664e41943077387a11c1c
+    m_Address: audio_woman_eng_wrong_hand
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1f583648fe8a9744aab4adedb7e328c3
+    m_Address: clean_03_woman_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26ca810ecc4332e42ad99d5e7a3591ef
+    m_Address: coffee_00_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 317062645d137e849a5127c0a95ead62
+    m_Address: coffee_00_wom_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44031f49ecebc2d4cb256e6bcc3abcf4
+    m_Address: audio_man_eng_03
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b74edf9504809c46889d1379d536fee
+    m_Address: audio_woman_eng_02
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 597337d52517e8346981dfd117d1b4a3
+    m_Address: audio_man_eng_04
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5bb89e71a6c9be845a30fbe8f7fd1780
+    m_Address: coffee_05_wom_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 718d094285cb25442ad19652a8b68818
+    m_Address: audio_woman_eng_05
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7489f0268d99f724f9b6170f85fabb90
+    m_Address: audio_man_eng_05
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76da1cfb64857f644b9606991a3896a6
+    m_Address: audio_woman_eng_00
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 776994931d175c74c8a58558d850a047
+    m_Address: clean_01_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78642acadba2c844597158b743410708
+    m_Address: audio_man_eng_00
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a03eb694ed3114499b1a133cb886066
+    m_Address: audio_man_eng_06
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e6139b53a99a6541abcf32cc8485e79
+    m_Address: audio_man_eng_08
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 884da53bd95eef74f8e4f60de5281a0c
+    m_Address: audio_man_eng_dont_worry
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9554f42da00ca7b4ab7996bfa7c86a83
+    m_Address: clean_00_woman_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 960835962dc6ca440b5f6ffd2732d500
+    m_Address: audio_woman_eng_08
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9793596ca44ed3e49ad04c89ff8a2092
+    m_Address: clean_04_woman_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f3f4a54ca2748e428fe2053533004c6
+    m_Address: coffee_01_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2d028a39def5c04d967f1cc0f01126d
+    m_Address: clean_00_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a61e85c24ce5c1a4cbe9d0a61893839a
+    m_Address: coffee_01_wom_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7f2c0fe5425cd041a2194fc08b4d907
+    m_Address: coffee_05_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9124bff17f18ff4a8978052d13ff3f8
+    m_Address: audio_man_eng_02
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac5d9512ec57cd748820839a51eab5f7
+    m_Address: audio_woman_eng_wrong_arm
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad19ff28c963abf46834bebcfbb4d9fa
+    m_Address: coffee_04_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: adb96e703d98986439bf9078a95c24a8
+    m_Address: coffee_03_wom_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b06df7e9b7a670b4b9532519f8960634
+    m_Address: clean_03_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd11d852e0d2b904e8fa4c28c31ffc61
+    m_Address: clean_01_woman_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c16a731c8b3b8c8429eb8335ee33d573
+    m_Address: audio_woman_eng_03
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd04cf374b0c0134d9fca735e657fafc
+    m_Address: audio_man_eng_07
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce0b8640943b3c84091421ad387b0bca
+    m_Address: coffee_04_wom_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf0aea44482f9ec42a61c7052067b83c
+    m_Address: audio_woman_eng_04
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d022058deee3d3942906087b258eeef3
+    m_Address: audio_man_eng_wrong_hand
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1146b08528412440870b2ad1d5f3a48
+    m_Address: clean_02_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7262b2221179694894ae0f1d5f120e6
+    m_Address: audio_woman_eng_dont_worry
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e61f329fe2ff12a4881130575216d59f
+    m_Address: audio_woman_eng_07
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7789d232b054ed429c71a62ea2c89b0
+    m_Address: clean_04_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6a64dd8b8226ed4bac06b6e58a8de0d
+    m_Address: audio_woman_eng_06
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa4178e71e43bad47901a0304415f560
+    m_Address: coffee_03_man_eng
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 1
+  m_Settings: {fileID: 11400000, guid: 5500b0f0d1efa9f4fba2d6bc067c4dbf, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 1786a155556412b4ba6a6e78132befda, type: 2}
+    - {fileID: 11400000, guid: 5e98978287d3cd745932dbcfc30658ea, type: 2}

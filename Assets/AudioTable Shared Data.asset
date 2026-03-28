@@ -1,0 +1,394 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: AudioTable Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: AudioTable
+  m_TableCollectionNameGuidString: 349851d13ee561c4db54a208a7099924
+  m_Entries:
+  - m_Id: 281423135567872
+    m_Key: Welcome
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2556986265104384
+    m_Key: WelcomeWoman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3252823173558272
+    m_Key: Audio01Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3273429629726720
+    m_Key: Audio01Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3279933757911040
+    m_Key: Audio02Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280077857419264
+    m_Key: Audio03Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280172803878912
+    m_Key: Audio04Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280266726928384
+    m_Key: Audio05Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280363552436224
+    m_Key: Audio06Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280453457342464
+    m_Key: WellDoneWoman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280687570808832
+    m_Key: Audio02Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280731602612224
+    m_Key: Audio03Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280762812428288
+    m_Key: Audio04Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280789962158080
+    m_Key: Audio05Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280816495325184
+    m_Key: Audio06Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3280849672269824
+    m_Key: WellDoneMan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26097915189981184
+    m_Key: AudioWrongArmMan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26098252374274048
+    m_Key: AudioWrongHandMan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26098411309035520
+    m_Key: AudioWrongArmWoman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26098525482184704
+    m_Key: AudioWrongHandWoman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26132260353142784
+    m_Key: AudioDontWorryMan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 26132448509620224
+    m_Key: AudioDontWorryWoman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305199298375680
+    m_Key: WelcomeCoffeeM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305351002157056
+    m_Key: Coffee01Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305464722321408
+    m_Key: Coffee02Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305533013979136
+    m_Key: Coffee03Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305604430393344
+    m_Key: Coffee04Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305689457324032
+    m_Key: Coffee05Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30305933024751616
+    m_Key: Coffee06Man
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306413763293184
+    m_Key: WelcomeCoffeeW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306495984234496
+    m_Key: Coffee01Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306588816764928
+    m_Key: Coffee02Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306653497126912
+    m_Key: Coffee03Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306707880472576
+    m_Key: Coffee04Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 30306754529521664
+    m_Key: Coffee05Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778631981789184
+    m_Key: WelcomeLivingRoom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778698193072128
+    m_Key: LivingRoom01
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778809899970560
+    m_Key: LivingRoom02
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43778913994207232
+    m_Key: LivingRoom03
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779044445450240
+    m_Key: LivingRoom04
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779110031781888
+    m_Key: LivingRoom05
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779561728962560
+    m_Key: WelcomeLivingRoomWoman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779647166935040
+    m_Key: LivingRoom01Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779738829254656
+    m_Key: LivingRoom02Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779804889542656
+    m_Key: LivingRoom03Woman
+    m_Metadata:
+      m_Items: []
+  - m_Id: 43779870035472384
+    m_Key: LivingRoom04Woman
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items:
+    - rid: 2502048805582012511
+  m_KeyGenerator:
+    rid: 2502048805582012504
+  references:
+    version: 2
+    RefIds:
+    - rid: 2502048805582012504
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables,
+        asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1737737766439
+    - rid: 2502048805582012511
+      type: {class: AssetTypeMetadata, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries:
+        - m_KeyId: 281423135567872
+          m_TableCodes:
+          - it
+          - en
+        - m_KeyId: 2556986265104384
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3252823173558272
+          m_TableCodes:
+          - it
+        - m_KeyId: 3273429629726720
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3279933757911040
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280077857419264
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280172803878912
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280266726928384
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280363552436224
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280453457342464
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280687570808832
+          m_TableCodes:
+          - it
+        - m_KeyId: 3280731602612224
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280762812428288
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280789962158080
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280816495325184
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 3280849672269824
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 26097915189981184
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 26098252374274048
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 26098411309035520
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 26098525482184704
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 26132260353142784
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 26132448509620224
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30305199298375680
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30305351002157056
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30305464722321408
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30305533013979136
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30305604430393344
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30305689457324032
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30306413763293184
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30306495984234496
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30306588816764928
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30306653497126912
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30306707880472576
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 30306754529521664
+          m_TableCodes:
+          - it
+          - en
+        - m_KeyId: 43778631981789184
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43778698193072128
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43778809899970560
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43778913994207232
+          m_TableCodes:
+          - it
+          - en
+        - m_KeyId: 43779044445450240
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43779561728962560
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43779647166935040
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43779738829254656
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43779804889542656
+          m_TableCodes:
+          - en
+          - it
+        - m_KeyId: 43779870035472384
+          m_TableCodes:
+          - en
+          - it
+        m_TypeString: UnityEngine.AudioClip, UnityEngine.AudioModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null

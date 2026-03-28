@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5b2b8bcda347ee742a136bd7203841f3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 16630
+  packageName: Origami Paper Crane
+  packageVersion: Initial Release
+  assetPath: Assets/Model/Materials/defaultMat.mat
+  uploadId: 5233
