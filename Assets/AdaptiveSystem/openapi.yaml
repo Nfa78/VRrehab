@@ -1,0 +1,916 @@
+﻿openapi: 3.0.3
+info:
+  title: Adaptive VR Rehab API
+  version: 0.2.1
+  description: API for receiving task context, metrics, and returning adaptation decisions. Authentication uses standard Supabase Auth email/password.
+security:
+  - bearerAuth: []
+servers:
+  - url: https://api.example.com
+paths:
+  /health:
+    get:
+      security: []
+      summary: Health check
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /signup:
+    post:
+      tags:
+        - Supabase Auth
+      summary: Sign up (email/password)
+      description: Direct Supabase Auth signup endpoint for email/password.
+      servers:
+        - url: https://{project_ref}.supabase.co/auth/v1
+          variables:
+            project_ref:
+              default: your-project-ref
+      security:
+        - supabaseApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthSignUpRequest'
+      responses:
+        '200':
+          description: User created. Local development currently has email confirmations disabled, so Supabase returns a session payload. If confirmations are enabled later, signup may instead return a user-only payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSignUpResponse'
+        '400':
+          description: Invalid signup request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+  /token:
+    post:
+      tags:
+        - Supabase Auth
+      summary: Sign in (password grant)
+      description: Direct Supabase Auth endpoint using `grant_type=password`.
+      servers:
+        - url: https://{project_ref}.supabase.co/auth/v1
+          variables:
+            project_ref:
+              default: your-project-ref
+      security:
+        - supabaseApiKey: []
+      parameters:
+        - in: query
+          name: grant_type
+          required: true
+          schema:
+            type: string
+            enum: [password]
+          description: Must be `password` for email/password sign-in.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthSignInRequest'
+      responses:
+        '200':
+          description: Session issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '400':
+          description: Invalid sign-in request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthErrorResponse'
+  /sessions/start:
+    post:
+      summary: Start a session
+      description: Starts a session for the authenticated user's patient profile. The server resolves the patient from the JWT-linked profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStartRequest'
+      responses:
+        '200':
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionStartResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /sessions/{session_id}/end:
+    post:
+      summary: End a session
+      parameters:
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionEndRequest'
+      responses:
+        '200':
+          description: Session ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionEndResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /sessions/{session_id}:
+    get:
+      summary: Get a session
+      parameters:
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /sessions/{session_id}/tasks:
+    get:
+      summary: List task executions for a session
+      parameters:
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task executions for session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionTasksResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /patients/me:
+    get:
+      summary: Get the current patient's profile
+      responses:
+        '200':
+          description: Patient profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientProfile'
+        '404':
+          description: Patient profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Create or replace the current patient's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpsertRequest'
+      responses:
+        '200':
+          description: Patient profile saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientProfile'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update fields on the current patient's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientPatchRequest'
+      responses:
+        '200':
+          description: Patient profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientProfile'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /patients/me/sessions:
+    get:
+      summary: List sessions for the current patient
+      responses:
+        '200':
+          description: Sessions for patient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks:
+    get:
+      summary: List task definitions
+      responses:
+        '200':
+          description: Task definitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /task-executions:
+    post:
+      summary: Start a task execution and receive timeout
+      description: Creates a task execution for a selected task definition and difficulty. The backend resolves the matching task level and returns the resulting level identifiers and timing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskStartRequest'
+      responses:
+        '200':
+          description: Task execution created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStartResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /task-executions/{task_execution_id}/metrics:
+    post:
+      summary: Submit aggregated metrics for a task execution
+      parameters:
+        - in: path
+          name: task_execution_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskMetricsRequest'
+      responses:
+        '200':
+          description: Metrics accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskMetricsResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Scene metrics already exist for this task execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get aggregated metrics for a task execution
+      parameters:
+        - in: path
+          name: task_execution_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskMetricsGetResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task metrics not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /task-executions/{task_execution_id}/end:
+    post:
+      summary: End a task execution
+      parameters:
+        - in: path
+          name: task_execution_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskEndRequest'
+      responses:
+        '200':
+          description: Task ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskEndResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /task-executions/{task_execution_id}:
+    get:
+      summary: Get a task execution
+      parameters:
+        - in: path
+          name: task_execution_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task execution details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskExecution'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/{task_id}/levels:
+    get:
+      summary: List difficulty levels for a task definition
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task levels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskLevelsResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /tasks/{task_id}/levels/{difficulty_level}:
+    get:
+      summary: Get difficulty level parameters for a task definition
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: difficulty_level
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task level
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskLevel'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth access token obtained after sign-in.
+    supabaseApiKey:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Supabase anon key required for Auth endpoints.
+  schemas:
+    AuthSignUpRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    AuthSignInRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    AuthSessionResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+        expires_at:
+          type: integer
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/AuthUser'
+    AuthSignUpResponse:
+      oneOf:
+        - $ref: '#/components/schemas/AuthUser'
+        - $ref: '#/components/schemas/AuthSessionResponse'
+    AuthUser:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        user_metadata:
+          type: object
+          additionalProperties: true
+    AuthErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    SessionStartRequest:
+      type: object
+      required:
+        - start_time
+      properties:
+        device:
+          type: string
+        version:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+    PatientUpsertRequest:
+      type: object
+      required:
+        - patient_code
+      properties:
+        patient_code:
+          type: string
+          description: User-facing pseudonymous patient code, unique per patient profile.
+        dominant_hand:
+          type: string
+        notes:
+          type: string
+    PatientProfile:
+      type: object
+      required:
+        - patient_code
+      properties:
+        patient_code:
+          type: string
+        dominant_hand:
+          type: string
+        notes:
+          type: string
+    PatientPatchRequest:
+      type: object
+      properties:
+        patient_code:
+          type: string
+          description: Updated user-facing pseudonymous patient code.
+        dominant_hand:
+          type: string
+        notes:
+          type: string
+    SessionStartResponse:
+      type: object
+      required:
+        - session_id
+      properties:
+        session_id:
+          type: string
+    SessionEndRequest:
+      type: object
+      required:
+        - end_time
+      properties:
+        end_time:
+          type: string
+          format: date-time
+    SessionEndResponse:
+      type: object
+      required:
+        - session_id
+      properties:
+        session_id:
+          type: string
+    TaskEndRequest:
+      type: object
+      required:
+        - end_time
+      properties:
+        end_time:
+          type: string
+          format: date-time
+    TaskEndResponse:
+      type: object
+      required:
+        - task_execution_id
+      properties:
+        task_execution_id:
+          type: string
+    TaskStartRequest:
+      type: object
+      required:
+        - session_id
+        - task_id
+        - difficulty_level
+        - start_time
+      properties:
+        session_id:
+          type: string
+        task_id:
+          type: string
+        difficulty_level:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+    TaskStartResponse:
+      type: object
+      required:
+        - task_execution_id
+        - task_level_id
+        - timeout_seconds
+      properties:
+        task_execution_id:
+          type: string
+        task_level_id:
+          type: string
+        timeout_seconds:
+          type: integer
+        expected_time_seconds:
+          type: integer
+          description: Optional expected completion time for normalization
+    TaskMetricsRequest:
+      type: object
+      required:
+        - global_metrics
+      properties:
+        global_metrics:
+          $ref: '#/components/schemas/GlobalMetrics'
+        scene_metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/SceneMetric'
+    GlobalMetrics:
+      type: object
+      required:
+        - completion_time
+        - error_count
+        - prompt_count
+        - path_efficiency
+        - smoothness
+        - hesitation_count
+        - hesitation_total_time
+        - spatial_accuracy
+      properties:
+        completion_time:
+          type: number
+          format: float
+        error_count:
+          type: integer
+        prompt_count:
+          type: integer
+        path_efficiency:
+          type: number
+          format: float
+        smoothness:
+          type: number
+          format: float
+        hesitation_count:
+          type: integer
+        hesitation_total_time:
+          type: number
+          format: float
+        spatial_accuracy:
+          type: number
+          format: float
+        steps_completed:
+          type: integer
+          description: Actual steps completed by the user
+        step_errors:
+          type: integer
+          description: Missed or incorrect steps during the task
+        avg_speed:
+          type: number
+          format: float
+        peak_speed:
+          type: number
+          format: float
+    SceneMetric:
+      type: object
+      required:
+        - feature_name
+        - feature_value
+      properties:
+        feature_name:
+          type: string
+        feature_value:
+          type: number
+          format: float
+        feature_unit:
+          type: string
+    TaskMetricsResponse:
+      type: object
+      required:
+        - decision
+        - method
+      properties:
+        decision:
+          type: string
+          enum: [increase, maintain, decrease]
+        method:
+          type: string
+          enum: [rule_based, ml]
+        confidence:
+          type: number
+          format: float
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+        time:
+          type: string
+          format: date-time
+    Session:
+      type: object
+      required:
+        - session_id
+        - start_time
+      properties:
+        session_id:
+          type: string
+        patient_code:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        device:
+          type: string
+        version:
+          type: string
+        notes:
+          type: string
+    TaskDefinition:
+      type: object
+      required:
+        - task_id
+        - scene
+        - task_type
+      properties:
+        task_id:
+          type: string
+        scene:
+          type: string
+        task_type:
+          type: string
+    TaskLevel:
+      type: object
+      required:
+        - task_level_id
+        - task_id
+        - difficulty_level
+        - expected_time_seconds
+        - timeout_seconds
+        - target_size
+        - reach_distance
+        - task_complexity
+      properties:
+        task_level_id:
+          type: string
+        task_id:
+          type: string
+        difficulty_level:
+          type: integer
+        expected_time_seconds:
+          type: integer
+        timeout_seconds:
+          type: integer
+        target_size:
+          type: number
+          format: float
+        reach_distance:
+          type: number
+          format: float
+        task_complexity:
+          type: integer
+    TaskExecution:
+      type: object
+      required:
+        - task_execution_id
+        - session_id
+        - task_id
+        - task_level_id
+        - scene
+        - task_type
+        - difficulty_level
+        - target_size
+        - reach_distance
+        - task_complexity
+        - start_time
+      properties:
+        task_execution_id:
+          type: string
+        session_id:
+          type: string
+        task_id:
+          type: string
+        task_level_id:
+          type: string
+        scene:
+          type: string
+        task_type:
+          type: string
+        difficulty_level:
+          type: integer
+        target_size:
+          type: number
+          format: float
+        reach_distance:
+          type: number
+          format: float
+        task_complexity:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+    TaskMetricsGetResponse:
+      type: object
+      required:
+        - global_metrics
+      properties:
+        global_metrics:
+          $ref: '#/components/schemas/GlobalMetrics'
+        scene_metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/SceneMetric'
+    TaskListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskDefinition'
+    TaskLevelsResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskLevel'
+    SessionTasksResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskExecution'
+    SessionsListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
