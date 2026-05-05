@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using AdaptiveSystem.Models;
 using UnityEngine;
@@ -9,6 +11,9 @@ namespace AdaptiveSystem.Api
 {
     public class AdaptiveApiClient : MonoBehaviour
     {
+        private const string ConnectionSettingsFolderName = "Adaptive Performance";
+        private const string ConnectionSettingsFileName = "server_connection.json";
+
         private enum RequestScope
         {
             PublicApi,
@@ -16,10 +21,18 @@ namespace AdaptiveSystem.Api
             PrivateApi
         }
 
+        [SerializeField] private bool loadConnectionSettingsFromJson = true;
+        [SerializeField] private bool logRawErrorResponses = true;
         [SerializeField] private string authBaseUrl = "http://127.0.0.1:54421/auth/v1";
         [SerializeField] private string apiBaseUrl = "http://127.0.0.1:54421/functions/v1/api";
         [SerializeField] private string publishableKey = string.Empty;
         [SerializeField] private AuthSessionResponse authSession = new AuthSessionResponse();
+
+        public bool LoadConnectionSettingsFromJson
+        {
+            get { return loadConnectionSettingsFromJson; }
+            set { loadConnectionSettingsFromJson = value; }
+        }
 
         public string AuthBaseUrl
         {
@@ -67,6 +80,47 @@ namespace AdaptiveSystem.Api
         public bool HasAccessToken
         {
             get { return !string.IsNullOrEmpty(AccessToken); }
+        }
+
+        private void Awake()
+        {
+            if (!loadConnectionSettingsFromJson)
+            {
+                return;
+            }
+
+            ConnectionSettings connectionSettings;
+            string configurationError;
+            if (!TryReadConnectionSettings(out connectionSettings, out configurationError))
+            {
+                throw new InvalidOperationException(configurationError);
+            }
+
+            ApplyConnectionSettings(connectionSettings);
+        }
+
+        public string GetConnectionSettingsFilePath()
+        {
+            return Path.Combine(Application.dataPath, ConnectionSettingsFolderName, ConnectionSettingsFileName);
+        }
+
+        public bool LogRawErrorResponses
+        {
+            get { return logRawErrorResponses; }
+            set { logRawErrorResponses = value; }
+        }
+
+        public bool TryGetConnectionSettingsError(out string error)
+        {
+            error = null;
+
+            if (!loadConnectionSettingsFromJson)
+            {
+                return true;
+            }
+
+            ConnectionSettings settings;
+            return TryReadConnectionSettings(out settings, out error);
         }
 
         public IEnumerator HealthAsync(Action<ApiResult<HealthResponse>> onComplete)
@@ -309,6 +363,8 @@ namespace AdaptiveSystem.Api
                     transportError = GetTransportError(request)
                 };
 
+                LogRawFailureResponse(method, url, response);
+
                 if (onComplete != null)
                 {
                     onComplete(response);
@@ -365,6 +421,93 @@ namespace AdaptiveSystem.Api
             authSession.expires_at = session.expires_at;
             authSession.refresh_token = session.refresh_token;
             authSession.user = session.user;
+        }
+
+        private bool TryReadConnectionSettings(out ConnectionSettings settings, out string error)
+        {
+            string path = GetConnectionSettingsFilePath();
+            settings = null;
+            error = null;
+
+            if (!File.Exists(path))
+            {
+                error = "AdaptiveApiClient could not load server connection settings because the file was not found at '" + path + "'. " +
+                        "Expected a JSON file with authBaseUrl, apiBaseUrl, and publishableKey.";
+                return false;
+            }
+
+            string json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                error = "AdaptiveApiClient could not load server connection settings because '" + path + "' is empty. " +
+                        "Expected a JSON file with authBaseUrl, apiBaseUrl, and publishableKey.";
+                return false;
+            }
+
+            try
+            {
+                settings = JsonUtility.FromJson<ConnectionSettings>(json);
+            }
+            catch (Exception ex)
+            {
+                error = "AdaptiveApiClient could not parse server connection settings from '" + path + "': " + ex.Message;
+                return false;
+            }
+
+            if (settings == null)
+            {
+                error = "AdaptiveApiClient could not load server connection settings from '" + path + "' because the JSON object is null.";
+                return false;
+            }
+
+            var missingFields = new List<string>();
+            if (string.IsNullOrWhiteSpace(settings.authBaseUrl))
+            {
+                missingFields.Add("authBaseUrl");
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.apiBaseUrl))
+            {
+                missingFields.Add("apiBaseUrl");
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.publishableKey))
+            {
+                missingFields.Add("publishableKey");
+            }
+
+            if (missingFields.Count > 0)
+            {
+                error = "AdaptiveApiClient could not load server connection settings from '" + path + "' because the following required field(s) are missing or empty: " +
+                        string.Join(", ", missingFields) + ".";
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ApplyConnectionSettings(ConnectionSettings settings)
+        {
+            authBaseUrl = settings.authBaseUrl.Trim();
+            apiBaseUrl = settings.apiBaseUrl.Trim();
+            publishableKey = settings.publishableKey.Trim();
+        }
+
+        private void LogRawFailureResponse(string method, string url, RawResponse response)
+        {
+            if (!logRawErrorResponses || response == null || response.IsHttpSuccess)
+            {
+                return;
+            }
+
+            Debug.LogError(
+                "[AdaptiveApiClient] Request failed.\n" +
+                "Method: " + method + "\n" +
+                "URL: " + url + "\n" +
+                "Status: " + response.statusCode + "\n" +
+                "Transport Error: " + (string.IsNullOrWhiteSpace(response.transportError) ? "<none>" : response.transportError) + "\n" +
+                "Raw Response:\n" + (string.IsNullOrEmpty(response.text) ? "<empty>" : response.text),
+                this);
         }
 
         private static ApiResult<T> ParseApiResult<T>(RawResponse raw)
@@ -486,6 +629,14 @@ namespace AdaptiveSystem.Api
             {
                 get { return statusCode >= 200 && statusCode < 300 && string.IsNullOrEmpty(transportError); }
             }
+        }
+
+        [Serializable]
+        private sealed class ConnectionSettings
+        {
+            public string authBaseUrl;
+            public string apiBaseUrl;
+            public string publishableKey;
         }
     }
 }

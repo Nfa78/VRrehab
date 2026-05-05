@@ -74,6 +74,6 @@ public class TaskTelemetryController : MonoBehaviour
 ```
 
 Notes
-- `AdaptiveApiClient` uses separate auth and API base URLs that default to the local Supabase stack.
+- `AdaptiveApiClient` reads `authBaseUrl`, `apiBaseUrl`, and `publishableKey` from `Assets/Adaptive Performance/server_connection.json` by default and throws a startup error if the file is missing or incomplete.
 - `MetricsAggregator` is a baseline; extend `FeatureExtractor` with task-specific metrics as needed.
 - `AdaptiveApiSmokeTest` provides a small signup/login -> patient -> session -> tasks flow for local verification.
