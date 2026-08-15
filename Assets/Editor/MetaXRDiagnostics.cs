@@ -5,19 +5,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public static class MetaXRDiagnostics
 {
     private const string MenuPath = "Tools/Meta XR/Run Diagnostics";
+    private const string XrGeneralSettingsAssetPath = "Assets/XR/XRGeneralSettingsPerBuildTarget.asset";
+    private const string XrRuntimeJsonKey = "XR_RUNTIME_JSON";
+    private const string XrSelectedRuntimeJsonKey = "XR_SELECTED_RUNTIME_JSON";
 
     [MenuItem(MenuPath)]
     public static void Run()
     {
         var scene = SceneManager.GetActiveScene();
         Debug.Log($"[MetaXRDiagnostics] Scene: {scene.name}");
+        Debug.Log($"[MetaXRDiagnostics] Active build target: {EditorUserBuildSettings.activeBuildTarget}");
 
         LogPackage("com.meta.xr.sdk.core", "Meta XR Core SDK");
         LogPackage("com.meta.xr.sdk.interaction", "Meta XR Interaction SDK");
@@ -44,27 +47,43 @@ public static class MetaXRDiagnostics
     {
         try
         {
-            // XR Management settings via reflection to avoid hard dependency
-            var settingsType = Type.GetType(
-                "UnityEditor.XR.Management.XRGeneralSettingsPerBuildTarget, Unity.XR.Management.Editor");
+            var settingsType = Type.GetType("UnityEngine.XR.Management.XRGeneralSettingsPerBuildTarget, Unity.XR.Management");
             if (settingsType == null)
             {
-                Debug.LogWarning("[MetaXRDiagnostics] XR Management editor types not found. Is XR Management installed?");
+                Debug.LogWarning("[MetaXRDiagnostics] XR Management types not found. Is XR Management installed?");
                 return;
             }
 
             var settings = settingsType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+            string source = "XRGeneralSettingsPerBuildTarget.Instance";
+
             if (settings == null)
             {
-                Debug.LogWarning("[MetaXRDiagnostics] XRGeneralSettingsPerBuildTarget.Instance is null.");
+                settings = AssetDatabase.LoadAssetAtPath(XrGeneralSettingsAssetPath, settingsType);
+                source = XrGeneralSettingsAssetPath;
+            }
+
+            if (settings == null)
+            {
+                Debug.LogWarning("[MetaXRDiagnostics] XRGeneralSettingsPerBuildTarget could not be loaded from singleton or asset.");
                 return;
             }
 
-            bool standaloneOpenXR = IsOpenXRLoaderEnabled(settings, BuildTargetGroup.Standalone);
-            bool androidOpenXR = IsOpenXRLoaderEnabled(settings, BuildTargetGroup.Android);
+            Debug.Log($"[MetaXRDiagnostics] XR settings source: {source}");
 
-            Debug.Log($"[MetaXRDiagnostics] OpenXR loader Standalone: {(standaloneOpenXR ? "ON" : "OFF")}");
-            Debug.Log($"[MetaXRDiagnostics] OpenXR loader Android: {(androidOpenXR ? "ON" : "OFF")}");
+            LogLoaderState(settings, BuildTargetGroup.Standalone);
+            LogLoaderState(settings, BuildTargetGroup.Android);
+
+            var activeGeneralSettings = GetGeneralSettingsForGroup(settings, BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget));
+            if (activeGeneralSettings != null)
+            {
+                var assignedManager = GetAssignedSettings(activeGeneralSettings);
+                if (assignedManager != null)
+                {
+                    var activeLoader = assignedManager.GetType().GetProperty("activeLoader")?.GetValue(assignedManager) as UnityEngine.Object;
+                    Debug.Log($"[MetaXRDiagnostics] Active loader (play mode only): {(activeLoader != null ? activeLoader.name : "<none>")}");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -72,43 +91,99 @@ public static class MetaXRDiagnostics
         }
     }
 
-    private static bool IsOpenXRLoaderEnabled(object settings, BuildTargetGroup group)
+    private static void LogLoaderState(object settings, BuildTargetGroup group)
     {
-        // XRGeneralSettingsPerBuildTarget has GetSettingsForBuildTargetGroup(BuildTargetGroup)
-        var getSettings = settings.GetType().GetMethod("GetSettingsForBuildTargetGroup");
-        var generalSettings = getSettings?.Invoke(settings, new object[] { group });
+        var generalSettings = GetGeneralSettingsForGroup(settings, group);
         if (generalSettings == null)
-            return false;
+        {
+            Debug.LogWarning($"[MetaXRDiagnostics] No XR general settings found for {group}.");
+            return;
+        }
 
-        var managerProp = generalSettings.GetType().GetProperty("AssignedSettings");
-        var manager = managerProp?.GetValue(generalSettings);
+        var manager = GetAssignedSettings(generalSettings);
         if (manager == null)
-            return false;
+        {
+            Debug.LogWarning($"[MetaXRDiagnostics] No XR manager assigned for {group}.");
+            return;
+        }
 
         var loadersProp = manager.GetType().GetProperty("loaders");
         var loaders = loadersProp?.GetValue(manager) as IEnumerable<UnityEngine.Object>;
         if (loaders == null)
-            return false;
+        {
+            Debug.LogWarning($"[MetaXRDiagnostics] Loader list unavailable for {group}.");
+            return;
+        }
 
-        return loaders.Any(l => l != null && l.GetType().Name.Contains("OpenXR"));
+        var loaderNames = loaders.Where(l => l != null).Select(l => l.name).ToArray();
+        bool hasOpenXr = loaderNames.Any(name => name.IndexOf("OpenXR", StringComparison.OrdinalIgnoreCase) >= 0);
+        bool hasSimulation = loaderNames.Any(name => name.IndexOf("Simulation", StringComparison.OrdinalIgnoreCase) >= 0);
+
+        Debug.Log($"[MetaXRDiagnostics] {group} loaders: {(loaderNames.Length > 0 ? string.Join(", ", loaderNames) : "<none>")}");
+        Debug.Log($"[MetaXRDiagnostics] {group} OpenXR loader: {(hasOpenXr ? "ON" : "OFF")}");
+
+        if (group == BuildTargetGroup.Standalone && hasOpenXr && hasSimulation)
+        {
+            Debug.LogWarning("[MetaXRDiagnostics] Standalone has both OpenXR and Simulation loaders enabled. This can destabilize Meta XR Simulator startup.");
+        }
+    }
+
+    private static object GetGeneralSettingsForGroup(object settings, BuildTargetGroup group)
+    {
+        var type = settings.GetType();
+        var instanceMethod = type.GetMethod("GetSettingsForBuildTargetGroup", BindingFlags.Public | BindingFlags.Instance);
+        if (instanceMethod != null)
+        {
+            return instanceMethod.Invoke(settings, new object[] { group });
+        }
+
+        var staticMethod = type.GetMethod("XRGeneralSettingsForBuildTarget", BindingFlags.Public | BindingFlags.Static);
+        if (staticMethod != null)
+        {
+            return staticMethod.Invoke(null, new object[] { group });
+        }
+
+        return null;
+    }
+
+    private static object GetAssignedSettings(object generalSettings)
+    {
+        var type = generalSettings.GetType();
+        return type.GetProperty("AssignedSettings")?.GetValue(generalSettings)
+               ?? type.GetProperty("Manager")?.GetValue(generalSettings);
     }
 
     private static void LogSimulatorStatus()
     {
-        // Check XR runtime env vars set by Meta XR Simulator
-        var runtime = Environment.GetEnvironmentVariable("XR_RUNTIME_JSON");
+        var runtime = Environment.GetEnvironmentVariable(XrRuntimeJsonKey);
+        var selectedRuntime = Environment.GetEnvironmentVariable(XrSelectedRuntimeJsonKey);
+
+        Debug.Log($"[MetaXRDiagnostics] {XrRuntimeJsonKey}: {FormatEnvValue(runtime)}");
+        Debug.Log($"[MetaXRDiagnostics] {XrSelectedRuntimeJsonKey}: {FormatEnvValue(selectedRuntime)}");
+
         if (string.IsNullOrEmpty(runtime))
         {
-            Debug.LogWarning("[MetaXRDiagnostics] XR_RUNTIME_JSON not set. Simulator likely not active.");
+            Debug.LogWarning("[MetaXRDiagnostics] XR runtime env var is not set. Simulator likely not active.");
+            return;
+        }
+
+        if (runtime.IndexOf("meta_openxr_simulator.json", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            Debug.Log("[MetaXRDiagnostics] Meta XR Simulator runtime is selected.");
         }
         else
         {
-            Debug.Log($"[MetaXRDiagnostics] XR_RUNTIME_JSON: {runtime}");
-            Debug.Log(runtime.Contains("meta_openxr_simulator.json")
-                ? "[MetaXRDiagnostics] OK: Meta XR Simulator runtime is selected."
-                : "[MetaXRDiagnostics] WARNING: XR runtime is not Meta XR Simulator.");
+            Debug.LogWarning("[MetaXRDiagnostics] XR runtime is not Meta XR Simulator.");
+        }
+
+        if (!string.Equals(runtime, selectedRuntime, StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.LogWarning("[MetaXRDiagnostics] XR runtime and selected runtime differ. Simulator activation may be stale.");
         }
     }
+
+    private static string FormatEnvValue(string value)
+        => string.IsNullOrEmpty(value) ? "<unset>" : value;
 
     private static void LogRigObjects()
     {

@@ -20,6 +20,10 @@ TagManager:
   - QDSUITooltip
   - QDSUISection
   - Carrot
+  - WaterCan
+  - Bucket
+  - HandVisual
+  - HandAnchor
   layers:
   - Default
   - TransparentFX
@@ -51,7 +55,7 @@ TagManager:
   - 
   - 
   - 
-  - 
+  - XR Simulation
   - 
   m_SortingLayers:
   - name: Default

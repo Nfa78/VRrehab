@@ -1818,6 +1818,9 @@ public partial class OVRManager : MonoBehaviour, OVRMixedRealityCaptureConfigura
             if (!isHmdPresent)
                 return _trackingOriginType;
 
+            if (OVRPlugin.UnityOpenXR.Enabled && xrSession == 0)
+                return _trackingOriginType;
+
             return (OVRManager.TrackingOrigin)OVRPlugin.GetTrackingOriginType();
         }
 
@@ -1834,6 +1837,12 @@ public partial class OVRManager : MonoBehaviour, OVRMixedRealityCaptureConfigura
 #if USING_XR_SDK_OPENXR
             if (OVRPlugin.UnityOpenXR.Enabled)
             {
+                if (xrSession == 0)
+                {
+                    _trackingOriginType = value;
+                    return;
+                }
+
                 if (GetCurrentInputSubsystem() == null)
                 {
                     Debug.LogError("InputSubsystem not found");
