@@ -19,7 +19,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     [SerializeField] private string requiredTaskId = "catch_leafs";
     [SerializeField] private string pickupObjectiveId = "pick_bucket";
     [SerializeField] private string catchObjectiveId = "catch_leafs";
-    [SerializeField] private string legacyLeafTaskId = "rake_leafs";
+    [SerializeField] private string legacyLeafTaskId = "rake_leaves";
 
     [Header("Catch Volume")]
     [SerializeField] private Vector3 catchVolumeCenterLocal = new Vector3(0f, 0.17f, 0f);

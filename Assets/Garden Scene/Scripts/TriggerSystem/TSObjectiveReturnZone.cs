@@ -91,6 +91,7 @@ namespace TriggerSystem
 
         private void Update()
         {
+            ClearReturnedObjectsWhenObjectiveIsInactive();
             UpdateHintAnimation();
 
             if (!completeWhenObjectInside || Time.time < _nextInsideCheckTime)
@@ -100,6 +101,16 @@ namespace TriggerSystem
 
             _nextInsideCheckTime = Time.time + insideRetryInterval;
             TryCompleteForInsideTargets();
+        }
+
+        private void ClearReturnedObjectsWhenObjectiveIsInactive()
+        {
+            if (_returnedObjectIds.Count == 0 || IsObjectiveCurrent())
+            {
+                return;
+            }
+
+            _returnedObjectIds.Clear();
         }
 
         [ContextMenu("Configure TS Radius")]

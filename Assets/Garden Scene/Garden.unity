@@ -4685,6 +4685,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeafsFallingEffect
   fallSpeed: 0.3
+  resetYThreshold: 0.2
+  spawnPhysicsCopyBeforeReset: 1
+  spawnedLeafParent: {fileID: 0}
+  spawnedLeafLifetimeSeconds: 0
+  fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -6371,6 +6376,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeafsFallingEffect
   fallSpeed: 0.3
+  resetYThreshold: 0.2
+  spawnPhysicsCopyBeforeReset: 1
+  spawnedLeafParent: {fileID: 0}
+  spawnedLeafLifetimeSeconds: 0
+  fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -9922,6 +9932,8 @@ MonoBehaviour:
   useHandTagFallback: 1
   allowGrabAsPickup: 1
   allowPinchAsPickup: 1
+  useHandsResolver: 1
+  handsResolver: {fileID: 0}
   logDebug: 1
   triggerSystemRadius: {fileID: 0}
   seedRadiusSource: {fileID: 0}
@@ -10039,7 +10051,7 @@ MonoBehaviour:
   requiredTaskId: catch_leafs
   pickupObjectiveId: pick_bucket
   catchObjectiveId: catch_leafs
-  legacyLeafTaskId: rake_leafs
+  legacyLeafTaskId: rake_leaves
   catchVolumeCenterLocal: {x: 0, y: 0.17, z: 0}
   catchVolumeSizeLocal: {x: 0.42, y: 0.2, z: 0.42}
   leafRespawnDelaySeconds: 0.35
@@ -12240,11 +12252,21 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c41f2d2b29b3493ab1551dc6ca6f8ed4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TaskSystem.CollectLeafsTaskDriver
-  taskId: rake_leafs
-  pickStepId: pick
-  collectStepId: throw
-  milestoneStepId: wp2
+  m_EditorClassIdentifier: Assembly-CSharp::TaskSystem.RakeLeavesTaskDriver
+  taskId: rake_leaves
+  pickupHoeStepId: pickup_hoe
+  rakeLeavesStepId: rake_leaves
+  returnHoeStepId: return_hoe
+  hoeObject: {fileID: 94698973819075013}
+  hoeHandGrabInteractable: {fileID: 94698973822397311}
+  hoeRigidbody: {fileID: 94698973822397309}
+  autoFindHoeByName: 1
+  hoeObjectName: HoePrefab
+  returnDistanceThreshold: 0.35
+  snapHoeOnReturn: 1
+  clearVelocityOnReturn: 1
+  makeKinematicOnReturn: 1
+  logDebug: 0
 --- !u!114 &860600005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12260,6 +12282,7 @@ MonoBehaviour:
   taskId: catch_leafs
   pickupStepId: pick_bucket
   catchStepId: catch_leafs
+  returnStepId: return_bucket
 --- !u!1 &862880458
 GameObject:
   m_ObjectHideFlags: 0
@@ -12873,7 +12896,7 @@ Transform:
   m_GameObject: {fileID: 898794295}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -10.353, y: 2.239, z: 7.305}
+  m_LocalPosition: {x: -10.353, y: 0.184, z: 7.305}
   m_LocalScale: {x: 0.1, y: 0.001, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12892,6 +12915,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeafsFallingEffect
   fallSpeed: 0.3
+  resetYThreshold: 0.2
+  spawnPhysicsCopyBeforeReset: 1
+  spawnedLeafParent: {fileID: 0}
+  spawnedLeafLifetimeSeconds: 0
+  fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -26067,6 +26095,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeafsFallingEffect
   fallSpeed: 0.3
+  resetYThreshold: 0.2
+  spawnPhysicsCopyBeforeReset: 1
+  spawnedLeafParent: {fileID: 0}
+  spawnedLeafLifetimeSeconds: 0
+  fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -31646,7 +31679,7 @@ MonoBehaviour:
       maxValue: 5
       completeWhenTargetReached: 1
       isMilestone: 0
-      highlightTarget: {fileID: 1113266234}
+      highlightTarget: {fileID: 0}
       currentObjectiveHighlightColor: {r: 0.2, g: 0.55, b: 1, a: 0.18}
       interactionStartedHighlightColor: {r: 0.2, g: 0.8, b: 1, a: 0.32}
       highlightPulseSpeed: 1.1
@@ -31654,6 +31687,22 @@ MonoBehaviour:
       highlightMaxAlphaMultiplier: 1
       activeRequiresCompletedObjectiveIds:
       - pick_bucket
+    - objectiveId: return_bucket
+      title: Place the bucket back
+      description: Place the bucket back on its indicator
+      required: 1
+      mode: 0
+      maxValue: 1
+      completeWhenTargetReached: 0
+      isMilestone: 0
+      highlightTarget: {fileID: 2001000011}
+      currentObjectiveHighlightColor: {r: 0.2, g: 0.55, b: 1, a: 0.18}
+      interactionStartedHighlightColor: {r: 0.2, g: 0.8, b: 1, a: 0.32}
+      highlightPulseSpeed: 1.1
+      highlightMinAlphaMultiplier: 0.55
+      highlightMaxAlphaMultiplier: 1
+      activeRequiresCompletedObjectiveIds:
+      - catch_leafs
     taskDriver: {fileID: 860600005}
     timeLimitSeconds: 20
     failOnTimeout: 0
@@ -31661,20 +31710,20 @@ MonoBehaviour:
     captureTrackedObjectStartStateOnStart: 1
     resetTrackedObjectsOnReset: 1
     autoCompleteWhenAllRequiredObjectivesComplete: 1
-  - taskId: rake_leafs
-    title: rake_leafs
-    description: rake the leafs that are falling on the ground
+  - taskId: rake_leaves
+    title: Rake leaves
+    description: Pick up the hoe, rake the fallen leaves, then return the hoe to its original place.
     trackedObjects:
-    - objectId: watering_can
-      target: {fileID: 1372049133}
-      rigidbody: {fileID: 1372049132}
+    - objectId: hoe
+      target: {fileID: 94698973818992345}
+      rigidbody: {fileID: 94698973822397309}
       captureStartPose: 1
       resetVelocityOnReset: 1
       restoreParentOnReset: 0
     objectives:
-    - objectiveId: pick
-      title: Pick the seeds by grabbing into the bucket
-      description: Pick the watering can off of the shelf
+    - objectiveId: pickup_hoe
+      title: Pick up the hoe
+      description: Pick up the hoe by its handle.
       required: 1
       mode: 0
       maxValue: 1
@@ -31687,38 +31736,38 @@ MonoBehaviour:
       highlightMinAlphaMultiplier: 0.55
       highlightMaxAlphaMultiplier: 1
       activeRequiresCompletedObjectiveIds: []
-    - objectiveId: throw
-      title: Throw the seeds onto the floor
-      description: water plant 1
+    - objectiveId: rake_leaves
+      title: Rake leaves
+      description: Rake the fallen leaves.
       required: 1
       mode: 1
       maxValue: 1
       completeWhenTargetReached: 1
       isMilestone: 0
-      highlightTarget: {fileID: 1528486334}
+      highlightTarget: {fileID: 0}
       currentObjectiveHighlightColor: {r: 0.2, g: 0.55, b: 1, a: 0.18}
       interactionStartedHighlightColor: {r: 0.2, g: 0.8, b: 1, a: 0.32}
       highlightPulseSpeed: 1.1
       highlightMinAlphaMultiplier: 0.55
       highlightMaxAlphaMultiplier: 1
       activeRequiresCompletedObjectiveIds:
-      - pick
-    - objectiveId: wp2
-      title: Water plant 2
-      description: water plant 1
+      - pickup_hoe
+    - objectiveId: return_hoe
+      title: Return the hoe
+      description: Return the hoe to its original place.
       required: 1
-      mode: 1
+      mode: 0
       maxValue: 1
-      completeWhenTargetReached: 1
+      completeWhenTargetReached: 0
       isMilestone: 0
-      highlightTarget: {fileID: 1969345910}
+      highlightTarget: {fileID: 94698973819075013}
       currentObjectiveHighlightColor: {r: 0.2, g: 0.55, b: 1, a: 0.18}
       interactionStartedHighlightColor: {r: 0.2, g: 0.8, b: 1, a: 0.32}
       highlightPulseSpeed: 1.1
       highlightMinAlphaMultiplier: 0.55
       highlightMaxAlphaMultiplier: 1
       activeRequiresCompletedObjectiveIds:
-      - pick
+      - rake_leaves
     taskDriver: {fileID: 860600004}
     timeLimitSeconds: 10
     failOnTimeout: 0
@@ -38250,7 +38299,7 @@ GameObject:
   - component: {fileID: 94698973822397310}
   m_Layer: 0
   m_Name: HoePrefab
-  m_TagString: Untagged
+  m_TagString: Hoe
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
