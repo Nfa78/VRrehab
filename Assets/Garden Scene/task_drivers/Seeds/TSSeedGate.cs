@@ -32,6 +32,9 @@ public class TSSeedGate : MonoBehaviour
     private readonly HashSet<int> seedsInside = new HashSet<int>();
     private readonly List<MaterialColorState> materialColorStates = new List<MaterialColorState>();
     private Coroutine flashRoutine;
+    private bool difficultyBaselineCaptured;
+    private float baselineExplicitRadius;
+    private float baselineRadiusScaleMultiplier;
 
     public event Action<TSSeedGate, SeedProjectileMarker> SeedPassed;
 
@@ -117,6 +120,27 @@ public class TSSeedGate : MonoBehaviour
         Vector3 scale = RadiusSource.lossyScale;
         float largestAxis = Mathf.Max(scale.x, scale.y, scale.z);
         return Mathf.Max(minimumRadius, largestAxis * radiusScaleMultiplier);
+    }
+
+    public void ApplyDifficultyRadiusScale(float radiusScale)
+    {
+        CaptureDifficultyBaselineIfNeeded();
+        float scale = Mathf.Max(0.01f, radiusScale);
+        explicitRadius = Mathf.Max(minimumRadius, baselineExplicitRadius * scale);
+        radiusScaleMultiplier = Mathf.Max(0.01f, baselineRadiusScaleMultiplier * scale);
+        seedsInside.Clear();
+    }
+
+    private void CaptureDifficultyBaselineIfNeeded()
+    {
+        if (difficultyBaselineCaptured)
+        {
+            return;
+        }
+
+        baselineExplicitRadius = explicitRadius;
+        baselineRadiusScaleMultiplier = radiusScaleMultiplier;
+        difficultyBaselineCaptured = true;
     }
 
     private bool IsSeedInsideGate(

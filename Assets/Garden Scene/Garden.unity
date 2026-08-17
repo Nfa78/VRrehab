@@ -4690,6 +4690,13 @@ MonoBehaviour:
   spawnedLeafParent: {fileID: 0}
   spawnedLeafLifetimeSeconds: 0
   fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
+  addRakeProgressReporterToPhysicsCopy: 1
+  rakedLeafMinZ: 6.7
+  rakedLeafMaxZ: 7.8
+  rakedLeafProgressDelta: 1
+  addHoeImpulseToPhysicsCopy: 1
+  hoeTag: Hoe
+  hoeCollisionImpulse: 0.18
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -6381,6 +6388,13 @@ MonoBehaviour:
   spawnedLeafParent: {fileID: 0}
   spawnedLeafLifetimeSeconds: 0
   fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
+  addRakeProgressReporterToPhysicsCopy: 1
+  rakedLeafMinZ: 6.7
+  rakedLeafMaxZ: 7.8
+  rakedLeafProgressDelta: 1
+  addHoeImpulseToPhysicsCopy: 1
+  hoeTag: Hoe
+  hoeCollisionImpulse: 0.18
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -12221,10 +12235,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskSystem.WaterPlantsTaskDriver
   taskId: water_plants
+  difficultyLevel: 1
+  applyDifficultyOnTaskStarted: 1
   pickStepId: pick
   firstPlantStepId: wp1
   secondPlantStepId: wp2
   returnStepId: return_can
+  autoFindDifficultyTargets: 1
+  waterSpills: []
+  waterSpillSetups: []
+  flowerPots: []
+  returnZones: []
+  difficultyProfiles:
+  - level: 1
+    timeLimitSeconds: 10
+    requiredWaterHitsPerPlant: 1
+    waterTriggerRadius: 0.2
+    waterTriggerLength: 1
+    plantHitboxScale: 1
+    tiltThreshold: 35
+    spillDuration: 1.1
+    returnZoneRadius: 0.35
+  - level: 2
+    timeLimitSeconds: 10
+    requiredWaterHitsPerPlant: 1
+    waterTriggerRadius: 0.2
+    waterTriggerLength: 1
+    plantHitboxScale: 1
+    tiltThreshold: 35
+    spillDuration: 1.1
+    returnZoneRadius: 0.35
+  - level: 3
+    timeLimitSeconds: 10
+    requiredWaterHitsPerPlant: 1
+    waterTriggerRadius: 0.2
+    waterTriggerLength: 1
+    plantHitboxScale: 1
+    tiltThreshold: 35
+    spillDuration: 1.1
+    returnZoneRadius: 0.35
 --- !u!114 &860600003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12238,9 +12287,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskSystem.SeedsTaskDriver
   taskId: throw_seeds
+  difficultyLevel: 1
+  applyDifficultyOnTaskStarted: 1
   pickupStepId: pick_seeds
   throwStepId: throw_seeds
   returnStepId: return_bucket
+  autoFindDifficultyTargets: 1
+  seedPickupState: {fileID: 0}
+  seedGateSequence: {fileID: 0}
+  seedThrowSpawner: {fileID: 0}
+  seedThrowArrow: {fileID: 0}
+  difficultyProfiles:
+  - level: 1
+    timeLimitSeconds: 10
+    requiredSuccessfulThrows: 1
+    seedPickupRadius: 0.35
+    gateRadiusScale: 1
+    activeGateCount: 0
+    resetSequenceOnWrongGate: 1
+    seedSpawnCount: 10
+    throwForceMin: 1.2
+    throwForceMax: 2.2
+    throwConeHalfAngleDeg: 6
+    showThrowDirectionArrow: 1
+  - level: 2
+    timeLimitSeconds: 10
+    requiredSuccessfulThrows: 1
+    seedPickupRadius: 0.35
+    gateRadiusScale: 1
+    activeGateCount: 0
+    resetSequenceOnWrongGate: 1
+    seedSpawnCount: 10
+    throwForceMin: 1.2
+    throwForceMax: 2.2
+    throwConeHalfAngleDeg: 6
+    showThrowDirectionArrow: 1
+  - level: 3
+    timeLimitSeconds: 10
+    requiredSuccessfulThrows: 1
+    seedPickupRadius: 0.35
+    gateRadiusScale: 1
+    activeGateCount: 0
+    resetSequenceOnWrongGate: 1
+    seedSpawnCount: 10
+    throwForceMin: 1.2
+    throwForceMax: 2.2
+    throwConeHalfAngleDeg: 6
+    showThrowDirectionArrow: 1
 --- !u!114 &860600004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12254,6 +12347,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskSystem.RakeLeavesTaskDriver
   taskId: rake_leaves
+  difficultyLevel: 1
+  applyDifficultyOnTaskStarted: 1
   pickupHoeStepId: pickup_hoe
   rakeLeavesStepId: rake_leaves
   returnHoeStepId: return_hoe
@@ -12267,6 +12362,16 @@ MonoBehaviour:
   clearVelocityOnReturn: 1
   makeKinematicOnReturn: 1
   logDebug: 0
+  difficultyProfiles:
+  - level: 1
+    timeLimitSeconds: 10
+    requiredRakedLeaves: 1
+  - level: 2
+    timeLimitSeconds: 10
+    requiredRakedLeaves: 1
+  - level: 3
+    timeLimitSeconds: 10
+    requiredRakedLeaves: 1
 --- !u!114 &860600005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12280,9 +12385,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskSystem.CatchLeafsTaskDriver
   taskId: catch_leafs
+  difficultyLevel: 1
+  applyDifficultyOnTaskStarted: 1
   pickupStepId: pick_bucket
   catchStepId: catch_leafs
   returnStepId: return_bucket
+  autoFindDifficultyTargets: 1
+  bucketLeafCatchSystem: {fileID: 0}
+  difficultyProfiles:
+  - level: 1
+    timeLimitSeconds: 20
+    requiredCaughtLeaves: 5
+    leafFallSpeed: 0.3
+    leafSwayAmount: 0.5
+    leafDepthAmount: 0.3
+    leafRespawnDelaySeconds: 0.35
+  - level: 2
+    timeLimitSeconds: 20
+    requiredCaughtLeaves: 5
+    leafFallSpeed: 0.3
+    leafSwayAmount: 0.5
+    leafDepthAmount: 0.3
+    leafRespawnDelaySeconds: 0.35
+  - level: 3
+    timeLimitSeconds: 20
+    requiredCaughtLeaves: 5
+    leafFallSpeed: 0.3
+    leafSwayAmount: 0.5
+    leafDepthAmount: 0.3
+    leafRespawnDelaySeconds: 0.35
 --- !u!1 &862880458
 GameObject:
   m_ObjectHideFlags: 0
@@ -12920,6 +13051,13 @@ MonoBehaviour:
   spawnedLeafParent: {fileID: 0}
   spawnedLeafLifetimeSeconds: 0
   fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
+  addRakeProgressReporterToPhysicsCopy: 1
+  rakedLeafMinZ: 6.7
+  rakedLeafMaxZ: 7.8
+  rakedLeafProgressDelta: 1
+  addHoeImpulseToPhysicsCopy: 1
+  hoeTag: Hoe
+  hoeCollisionImpulse: 0.18
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -22030,6 +22168,93 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &1383174975
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1383174978}
+  - component: {fileID: 1383174977}
+  - component: {fileID: 1383174976}
+  m_Layer: 0
+  m_Name: EventSoundManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1383174976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383174975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f885877e64a6ce847b6bcfd26c9c78ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSystem.SimManagerSoundBridge
+  simManager: {fileID: 1940167632}
+  soundManager: {fileID: 1383174977}
+  autoFindReferences: 1
+  simulationStartedEventId: sim.started
+  simulationPausedEventId: sim.paused
+  simulationResumedEventId: sim.resumed
+  simulationCompletedEventId: sim.completed
+  simulationFailedEventId: sim.failed
+  simulationStoppedEventId: sim.stopped
+  taskStartedEventId: task.started
+  taskCompletedEventId: task.completed
+  taskFailedEventId: task.failed
+  playTaskSpecificEvents: 0
+  objectiveCompletedEventId: objective.completed
+  objectiveProgressTickEventId: objective.progress_tick
+  playObjectiveProgressTicks: 1
+  playObjectiveSpecificEvents: 0
+  skipBooleanObjectiveProgressTicks: 1
+  debugLogging: 0
+--- !u!114 &1383174977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383174975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6093e380941829649a5c2b66fabba977, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSystem.EventSoundManager
+  soundLibraries:
+  - {fileID: 11400000, guid: 78dd8657134bdbe4fa18941911a9cd95, type: 2}
+  - {fileID: 11400000, guid: 52f76580743ef0e43a2d7d5297e2ea97, type: 2}
+  initialPoolSize: 8
+  poolRoot: {fileID: 0}
+  useUnscaledTimeForCooldowns: 1
+  dontDestroyOnLoad: 0
+  ignoreMissingSoundEvents: 1
+  warnOnceForMissingSoundEvents: 1
+  warnOnceForMissingClips: 1
+  debugLogging: 0
+--- !u!4 &1383174978
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383174975}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14.66551, y: 0.00223, z: 1.61917}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1383476985 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 699218207496619424, guid: a3cb63fbc355e984e9e5c2ca9e016b73, type: 3}
@@ -26100,6 +26325,13 @@ MonoBehaviour:
   spawnedLeafParent: {fileID: 0}
   spawnedLeafLifetimeSeconds: 0
   fallbackBoxColliderSize: {x: 0.25, y: 0.03, z: 0.25}
+  addRakeProgressReporterToPhysicsCopy: 1
+  rakedLeafMinZ: 6.7
+  rakedLeafMaxZ: 7.8
+  rakedLeafProgressDelta: 1
+  addHoeImpulseToPhysicsCopy: 1
+  hoeTag: Hoe
+  hoeCollisionImpulse: 0.18
   swayAmount: 0.5
   swaySpeed: 2
   depthAmount: 0.3
@@ -31577,6 +31809,7 @@ MonoBehaviour:
     timeLimitSeconds: 10
     failOnTimeout: 0
     timeoutFailureReason: Timeout
+    difficultyLevel: 0
     captureTrackedObjectStartStateOnStart: 1
     resetTrackedObjectsOnReset: 1
     autoCompleteWhenAllRequiredObjectivesComplete: 1
@@ -31642,6 +31875,7 @@ MonoBehaviour:
     timeLimitSeconds: 10
     failOnTimeout: 0
     timeoutFailureReason: Timeout
+    difficultyLevel: 0
     captureTrackedObjectStartStateOnStart: 1
     resetTrackedObjectsOnReset: 1
     autoCompleteWhenAllRequiredObjectivesComplete: 1
@@ -31707,12 +31941,14 @@ MonoBehaviour:
     timeLimitSeconds: 20
     failOnTimeout: 0
     timeoutFailureReason: Timeout
+    difficultyLevel: 0
     captureTrackedObjectStartStateOnStart: 1
     resetTrackedObjectsOnReset: 1
     autoCompleteWhenAllRequiredObjectivesComplete: 1
   - taskId: rake_leaves
     title: Rake leaves
-    description: Pick up the hoe, rake the fallen leaves, then return the hoe to its original place.
+    description: Pick up the hoe, rake the fallen leaves, then return the hoe to
+      its original place.
     trackedObjects:
     - objectId: hoe
       target: {fileID: 94698973818992345}
@@ -31772,6 +32008,7 @@ MonoBehaviour:
     timeLimitSeconds: 10
     failOnTimeout: 0
     timeoutFailureReason: Timeout
+    difficultyLevel: 0
     captureTrackedObjectStartStateOnStart: 1
     resetTrackedObjectsOnReset: 1
     autoCompleteWhenAllRequiredObjectivesComplete: 1
@@ -31803,6 +32040,15 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onCurrentTaskChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onTaskCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onObjectiveProgressChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onObjectiveCompleted:
     m_PersistentCalls:
       m_Calls: []
   onSimulationStateChanged:
@@ -36789,6 +37035,7 @@ MonoBehaviour:
   maxSecondsBetweenGates: 2
   resetSequenceOnWrongGate: 1
   uniqueGatePerThrow: 1
+  activeGateCountOverride: 0
 --- !u!1 &2129088049
 GameObject:
   m_ObjectHideFlags: 0
@@ -125335,3 +125582,4 @@ SceneRoots:
   - {fileID: 251273496}
   - {fileID: 860600001}
   - {fileID: 416853407}
+  - {fileID: 1383174978}

@@ -170,6 +170,17 @@ namespace TaskSystem
             return SetProgress(_currentValue + delta, currentTaskTimeSeconds);
         }
 
+        public void SetMaxValue(float value)
+        {
+            if (mode == ObjectiveMode.Boolean)
+            {
+                return;
+            }
+
+            maxValue = Mathf.Max(1f, value);
+            _currentValue = Mathf.Clamp(_currentValue, 0f, MaxValue);
+        }
+
         private void ApplyCurrentObjectiveHighlight()
         {
             if (highlightTarget == null)

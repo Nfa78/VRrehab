@@ -19,11 +19,24 @@ namespace TaskSystem
     public abstract class SimTaskDriver : MonoBehaviour, ISimTaskDriver
     {
         [SerializeField] private string taskId;
+        [SerializeField, HideInInspector] private int difficultyLevel = 1;
+        [SerializeField] private bool applyDifficultyOnTaskStarted = true;
 
         protected SimManager SimManager { get; private set; }
         protected SimTask SimTask { get; private set; }
 
         public virtual string TaskId => taskId;
+        public int DifficultyLevel
+        {
+            get => Mathf.Max(1, difficultyLevel);
+            set => difficultyLevel = Mathf.Max(1, value);
+        }
+
+        public bool ApplyDifficultyOnTaskStarted
+        {
+            get => applyDifficultyOnTaskStarted;
+            set => applyDifficultyOnTaskStarted = value;
+        }
 
         public virtual bool CanDriveTask(string candidateTaskId)
         {
@@ -45,6 +58,10 @@ namespace TaskSystem
 
         public virtual void OnTaskStarted()
         {
+            if (applyDifficultyOnTaskStarted)
+            {
+                ApplyDifficulty(DifficultyLevel);
+            }
         }
 
         public virtual void OnTaskStopped()
@@ -85,6 +102,10 @@ namespace TaskSystem
         public bool IsActiveStep(string stepId)
         {
             return IsCurrentStep(stepId);
+        }
+
+        public virtual void ApplyDifficulty(int level)
+        {
         }
 
         protected bool CompleteStep(string stepId = "")

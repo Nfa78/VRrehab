@@ -1,3 +1,4 @@
+using System;
 using Oculus.Interaction.HandGrab;
 using UnityEngine;
 
@@ -23,11 +24,26 @@ namespace TaskSystem
         [SerializeField] private bool makeKinematicOnReturn = true;
         [SerializeField] private bool logDebug;
 
+        [Header("Difficulty Profiles")]
+        [SerializeField] private DifficultyProfile[] difficultyProfiles = CreateDefaultDifficultyProfiles();
+
         private Pose initialHoePose;
         private bool hasInitialHoePose;
         private bool wasHoeGrabbedLastFrame;
 
         public override string TaskId => "rake_leaves";
+
+        public override void ApplyDifficulty(int level)
+        {
+            DifficultyProfile profile = ResolveDifficultyProfile(level);
+            if (profile == null)
+            {
+                return;
+            }
+
+            SimTask?.SetTimeLimitSeconds(profile.timeLimitSeconds);
+            SimTask?.SetObjectiveMaxValue(rakeLeavesStepId, profile.requiredRakedLeaves);
+        }
 
         private void Awake()
         {
@@ -221,6 +237,49 @@ namespace TaskSystem
             if (snapHoeOnReturn)
             {
                 hoeObject.transform.SetPositionAndRotation(initialHoePose.position, initialHoePose.rotation);
+            }
+        }
+
+        private DifficultyProfile ResolveDifficultyProfile(int level)
+        {
+            if (difficultyProfiles == null || difficultyProfiles.Length == 0)
+            {
+                difficultyProfiles = CreateDefaultDifficultyProfiles();
+            }
+
+            int requestedLevel = Mathf.Max(1, level);
+            for (int i = 0; i < difficultyProfiles.Length; i++)
+            {
+                DifficultyProfile profile = difficultyProfiles[i];
+                if (profile != null && profile.level == requestedLevel)
+                {
+                    return profile;
+                }
+            }
+
+            return difficultyProfiles[0];
+        }
+
+        private static DifficultyProfile[] CreateDefaultDifficultyProfiles()
+        {
+            return new[]
+            {
+                DifficultyProfile.Current(1),
+                DifficultyProfile.Current(2),
+                DifficultyProfile.Current(3)
+            };
+        }
+
+        [Serializable]
+        private sealed class DifficultyProfile
+        {
+            public int level = 1;
+            [Min(0f)] public float timeLimitSeconds = 10f;
+            [Min(1f)] public float requiredRakedLeaves = 1f;
+
+            public static DifficultyProfile Current(int level)
+            {
+                return new DifficultyProfile { level = level };
             }
         }
     }

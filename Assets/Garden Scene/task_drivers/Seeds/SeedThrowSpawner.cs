@@ -28,6 +28,18 @@ public class SeedThrowSpawner : MonoBehaviour
 
     private int _nextThrowId = 1;
 
+    public void ApplyDifficulty(
+        int newSpawnCount,
+        float newForceMin,
+        float newForceMax,
+        float newConeHalfAngleDeg)
+    {
+        spawnCount = Mathf.Max(1, newSpawnCount);
+        forceMin = Mathf.Max(0f, Mathf.Min(newForceMin, newForceMax));
+        forceMax = Mathf.Max(forceMin, Mathf.Max(newForceMin, newForceMax));
+        coneHalfAngleDeg = Mathf.Clamp(newConeHalfAngleDeg, 0f, 89f);
+    }
+
     public int SpawnBurst(Transform hand, Vector3 releaseVelocity)
     {
         if (hand == null)

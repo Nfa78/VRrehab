@@ -21,6 +21,7 @@ public class SeedGateSequence : MonoBehaviour
     [SerializeField] private float maxSecondsBetweenGates = 2f;
     [SerializeField] private bool resetSequenceOnWrongGate = true;
     [SerializeField] private bool uniqueGatePerThrow = true;
+    [SerializeField][Min(0)] private int activeGateCountOverride;
 
     private readonly List<Renderer> gateRenderers = new List<Renderer>();
     private readonly List<Collider> gateColliders = new List<Collider>();
@@ -168,6 +169,15 @@ public class SeedGateSequence : MonoBehaviour
         ResetSequence();
     }
 
+    public void ApplyDifficulty(int activeGateCount, bool shouldResetSequenceOnWrongGate, float gateRadiusScale)
+    {
+        activeGateCountOverride = Mathf.Max(0, activeGateCount);
+        resetSequenceOnWrongGate = shouldResetSequenceOnWrongGate;
+        ApplyGateRadiusScale(gateRadiusScale);
+        ResetSequence();
+        RefreshGateVisibility(true);
+    }
+
     private void ReportSuccess()
     {
         if (taskDriver == null)
@@ -201,12 +211,7 @@ public class SeedGateSequence : MonoBehaviour
         }
 
         gatesVisible = shouldShow;
-        SetRenderersEnabled(shouldShow);
-
-        if (disableGateCollidersWhenHidden)
-        {
-            SetCollidersEnabled(shouldShow);
-        }
+        SetGateObjectsEnabled(shouldShow);
 
         if (!shouldShow)
         {
@@ -260,7 +265,13 @@ public class SeedGateSequence : MonoBehaviour
 
     private int GetActiveGateCount()
     {
-        return UseTsGates ? orderedTsGates.Count : orderedGates.Count;
+        int totalGateCount = UseTsGates ? orderedTsGates.Count : orderedGates.Count;
+        if (activeGateCountOverride <= 0)
+        {
+            return totalGateCount;
+        }
+
+        return Mathf.Min(activeGateCountOverride, totalGateCount);
     }
 
     private bool IsExpectedGate(Component gate)
@@ -295,6 +306,77 @@ public class SeedGateSequence : MonoBehaviour
             if (gateColliders[i] != null)
             {
                 gateColliders[i].enabled = enabled;
+            }
+        }
+    }
+
+    private void SetGateObjectsEnabled(bool visible)
+    {
+        int activeGateCount = GetActiveGateCount();
+
+        if (UseTsGates)
+        {
+            for (int i = 0; i < orderedTsGates.Count; i++)
+            {
+                SetGateComponentObjectsEnabled(orderedTsGates[i], visible && i < activeGateCount);
+            }
+            return;
+        }
+
+        for (int i = 0; i < orderedGates.Count; i++)
+        {
+            SetGateComponentObjectsEnabled(orderedGates[i], visible && i < activeGateCount);
+        }
+    }
+
+    private void SetGateComponentObjectsEnabled(Component gate, bool enabled)
+    {
+        if (gate == null)
+        {
+            return;
+        }
+
+        Renderer[] renderers = gate.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+            {
+                renderers[i].enabled = enabled;
+            }
+        }
+
+        if (!disableGateCollidersWhenHidden)
+        {
+            return;
+        }
+
+        Collider[] colliders = gate.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null)
+            {
+                colliders[i].enabled = enabled;
+            }
+        }
+    }
+
+    private void ApplyGateRadiusScale(float gateRadiusScale)
+    {
+        float scale = Mathf.Max(0.01f, gateRadiusScale);
+
+        for (int i = 0; i < orderedTsGates.Count; i++)
+        {
+            if (orderedTsGates[i] != null)
+            {
+                orderedTsGates[i].ApplyDifficultyRadiusScale(scale);
+            }
+        }
+
+        for (int i = 0; i < orderedGates.Count; i++)
+        {
+            if (orderedGates[i] != null)
+            {
+                orderedGates[i].ApplyDifficultyRadiusScale(scale);
             }
         }
     }

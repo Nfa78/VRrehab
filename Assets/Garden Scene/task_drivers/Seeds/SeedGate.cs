@@ -26,6 +26,8 @@ public class SeedGate : MonoBehaviour
 
     private readonly List<MaterialColorState> materialColorStates = new List<MaterialColorState>();
     private Coroutine flashRoutine;
+    private bool difficultyBaselineCaptured;
+    private Vector3 baselineLocalScale;
 
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -77,6 +79,24 @@ public class SeedGate : MonoBehaviour
         }
 
         SeedPassed?.Invoke(this, marker);
+    }
+
+    public void ApplyDifficultyRadiusScale(float radiusScale)
+    {
+        CaptureDifficultyBaselineIfNeeded();
+        float scale = Mathf.Max(0.01f, radiusScale);
+        transform.localScale = baselineLocalScale * scale;
+    }
+
+    private void CaptureDifficultyBaselineIfNeeded()
+    {
+        if (difficultyBaselineCaptured)
+        {
+            return;
+        }
+
+        baselineLocalScale = transform.localScale;
+        difficultyBaselineCaptured = true;
     }
 
     private void CacheFlashRenderers()

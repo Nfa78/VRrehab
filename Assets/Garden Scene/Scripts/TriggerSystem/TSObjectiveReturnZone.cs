@@ -69,6 +69,12 @@ namespace TriggerSystem
         public IReadOnlyList<string> AcceptedObjectTags => acceptedObjectTags;
         public TSParasite TriggerRadius => triggerRadius;
 
+        public void ApplyDifficulty(float newDetectionRadius)
+        {
+            detectionRadius = Mathf.Max(0f, newDetectionRadius);
+            ConfigureTriggerRadius();
+        }
+
         private void Awake()
         {
             CacheInitialTransform();

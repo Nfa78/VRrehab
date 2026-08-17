@@ -72,6 +72,12 @@ public class SeedPickupState : MonoBehaviour
     public event Action PickedUp;
     public event Action Released;
 
+    public void ApplyDifficulty(float pickupRadius)
+    {
+        seedPickupRadius = Mathf.Max(0f, pickupRadius);
+        EnsureRadius();
+    }
+
     private void OnEnable()
     {
         EnsureRadius();

@@ -38,6 +38,25 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     private bool? bucketGrabComponentsEnabled;
     private string lastLoggedTaskId;
 
+    public void ApplyDifficulty(
+        float newLeafRespawnDelaySeconds,
+        float newLeafFallSpeed,
+        float newLeafSwayAmount,
+        float newLeafDepthAmount)
+    {
+        leafRespawnDelaySeconds = Mathf.Max(0f, newLeafRespawnDelaySeconds);
+        CacheLeaves();
+
+        for (int i = 0; i < leaves.Count; i++)
+        {
+            LeafRuntime leaf = leaves[i];
+            if (leaf != null && leaf.Effect != null)
+            {
+                leaf.Effect.ApplyCatchDifficulty(newLeafFallSpeed, newLeafSwayAmount, newLeafDepthAmount);
+            }
+        }
+    }
+
     private void Awake()
     {
         ResolveReferences();

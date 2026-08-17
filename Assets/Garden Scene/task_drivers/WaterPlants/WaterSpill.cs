@@ -164,6 +164,12 @@ public class WaterSpill : MonoBehaviour
         spillRoutine = null;
     }
 
+    public void ApplyDifficulty(float newSpillDuration, float newTiltThreshold)
+    {
+        spillDuration = Mathf.Max(0.01f, newSpillDuration);
+        tiltThreshold = Mathf.Clamp(newTiltThreshold, 0f, 180f);
+    }
+
     private void UpdateGrabState()
     {
         bool currentlyGrabbed = IsCurrentlyGrabbed();

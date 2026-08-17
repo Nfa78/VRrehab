@@ -14,6 +14,15 @@ public class SeedThrowArrow : MonoBehaviour
 
     private LineRenderer _arrow;
 
+    public void ApplyDifficulty(bool showArrow)
+    {
+        showThrowDirectionArrow = showArrow;
+        if (!showThrowDirectionArrow)
+        {
+            SetVisible(false);
+        }
+    }
+
     public void Render(Transform hand, bool seedsLoaded, bool isRightHandLikely)
     {
         bool shouldShow = showThrowDirectionArrow && seedsLoaded && hand != null;

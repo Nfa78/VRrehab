@@ -10,6 +10,7 @@ namespace TaskSystem
         [SerializeField] private AdaptiveApiClient adaptiveApi;
         [SerializeField] private string sessionId;
         [SerializeField] private int difficultyLevel = 1;
+        [SerializeField] private bool applyDifficultyLevelToLocalTaskDriver = true;
         [SerializeField] private bool startAdaptiveExecutionOnTaskStart = true;
         [SerializeField] private bool endAdaptiveExecutionOnTaskEnd = true;
 
@@ -79,6 +80,8 @@ namespace TaskSystem
 
         private void HandleTaskStarted(SimTask task)
         {
+            ApplyDifficultyLevelToCurrentDriver();
+
             if (!startAdaptiveExecutionOnTaskStart)
             {
                 return;
@@ -100,6 +103,19 @@ namespace TaskSystem
                 difficultyLevel,
                 task.StartedAtUtc,
                 OnAdaptiveTaskStarted));
+        }
+
+        private void ApplyDifficultyLevelToCurrentDriver()
+        {
+            if (!applyDifficultyLevelToLocalTaskDriver || simManager == null)
+            {
+                return;
+            }
+
+            if (simManager.CurrentTaskDriver is SimTaskDriver taskDriver)
+            {
+                taskDriver.DifficultyLevel = difficultyLevel;
+            }
         }
 
         private void HandleTaskEnded(SimTask task)

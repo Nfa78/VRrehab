@@ -16,6 +16,13 @@ namespace TaskSystem
             Failed
         }
 
+        public enum DifficultyLevel
+        {
+            Level0 = 0,
+            Level1 = 1,
+            Level2 = 2
+        }
+
         [Header("Task Identity")]
         [SerializeField] private string taskId;
         [SerializeField] private string title;
@@ -32,6 +39,7 @@ namespace TaskSystem
         [SerializeField] private string timeoutFailureReason = "Timeout";
 
         [Header("Task Behavior")]
+        [SerializeField] private DifficultyLevel difficultyLevel = DifficultyLevel.Level0;
         [SerializeField] private bool captureTrackedObjectStartStateOnStart = true;
         [SerializeField] private bool resetTrackedObjectsOnReset = true;
         [SerializeField] private bool autoCompleteWhenAllRequiredObjectivesComplete = true;
@@ -54,6 +62,8 @@ namespace TaskSystem
         public event Action<SimTask> Ended;
         public event Action<SimTask, string> Failed;
         public event Action<SimTask, SimTaskObjective> CurrentObjectiveChanged;
+        public event Action<SimTask, SimTaskObjective> ObjectiveProgressChanged;
+        public event Action<SimTask, SimTaskObjective> ObjectiveCompleted;
 
         public string TaskId => taskId;
         public string Title => title;
@@ -73,6 +83,8 @@ namespace TaskSystem
         public float TimeLimitSeconds => timeLimitSeconds;
         public bool FailOnTimeout => failOnTimeout;
         public string TimeoutFailureReason => timeoutFailureReason;
+        public DifficultyLevel Difficulty => difficultyLevel;
+        public int DifficultyProfileLevel => (int)difficultyLevel + 1;
         public bool HasTimeLimit => timeLimitSeconds > 0f;
         public bool IsRunning => _state == TaskState.Running;
         public bool IsPaused => _state == TaskState.Paused;
@@ -487,6 +499,23 @@ namespace TaskSystem
             return true;
         }
 
+        public void SetTimeLimitSeconds(float seconds)
+        {
+            timeLimitSeconds = Mathf.Max(0f, seconds);
+        }
+
+        public bool SetObjectiveMaxValue(string objectiveId, float maxValue)
+        {
+            SimTaskObjective objective = GetObjective(objectiveId);
+            if (objective == null)
+            {
+                return false;
+            }
+
+            objective.SetMaxValue(maxValue);
+            return true;
+        }
+
         public bool TryFailForTimeout(float currentClock)
         {
             if (!failOnTimeout || !IsRunning || !HasTimedOut(currentClock))
@@ -567,12 +596,25 @@ namespace TaskSystem
             }
 
             float elapsedSeconds = GetElapsedSeconds(currentClock);
+            float previousValue = objective.CurrentValue;
+            bool wasCompleted = objective.IsCompleted;
             bool isCompleted = mutation(objective, elapsedSeconds);
+            bool progressChanged = !Mathf.Approximately(previousValue, objective.CurrentValue);
+
+            if (progressChanged)
+            {
+                ObjectiveProgressChanged?.Invoke(this, objective);
+            }
 
             if (isCompleted)
             {
                 int objectiveIndex = GetObjectiveIndex(objective.ObjectiveId);
                 MarkCompletedObjective(objectiveIndex);
+            }
+
+            if (!wasCompleted && objective.IsCompleted)
+            {
+                ObjectiveCompleted?.Invoke(this, objective);
             }
 
             if (wasCurrentObjective && isCompleted)

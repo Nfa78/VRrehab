@@ -46,6 +46,27 @@ public class WaterSpillSetup : MonoBehaviour
         waterParticles.transform.SetPositionAndRotation(particlePosition, spawnRotation);
     }
 
+    public void ApplyDifficulty(float newTriggerRadius, float newTriggerLength)
+    {
+        triggerRadius = Mathf.Max(0.01f, newTriggerRadius);
+        triggerLength = Mathf.Max(triggerRadius * 2f, newTriggerLength);
+
+        if (waterTrigger == null)
+        {
+            return;
+        }
+
+        CapsuleCollider triggerCollider = waterTrigger.GetComponent<CapsuleCollider>();
+        if (triggerCollider == null)
+        {
+            return;
+        }
+
+        triggerCollider.radius = triggerRadius;
+        triggerCollider.height = triggerLength;
+        triggerCollider.center = new Vector3(0f, 0f, triggerCollider.height * 0.5f);
+    }
+
     private Vector3 GetWorldEmissionDirection()
     {
         Transform exitPoint = ActiveExitPoint;

@@ -48,6 +48,13 @@ public class LeafsFallingEffect : MonoBehaviour
 
     public bool IsSimulationActive => simulationActive;
 
+    public void ApplyCatchDifficulty(float newFallSpeed, float newSwayAmount, float newDepthAmount)
+    {
+        fallSpeed = Mathf.Max(0f, newFallSpeed);
+        swayAmount = Mathf.Max(0f, newSwayAmount);
+        depthAmount = Mathf.Max(0f, newDepthAmount);
+    }
+
     private void Awake()
     {
         EnsureInitialized();

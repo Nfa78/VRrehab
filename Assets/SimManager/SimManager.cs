@@ -10,6 +10,9 @@ namespace TaskSystem
     public class SimTaskChangedEvent : UnityEvent<SimTask> { }
 
     [Serializable]
+    public class SimTaskObjectiveChangedEvent : UnityEvent<SimTaskObjective> { }
+
+    [Serializable]
     public class SimManagerStateChangedEvent : UnityEvent<SimManager.SimulationState> { }
 
     public class SimManager : MonoBehaviour
@@ -53,6 +56,9 @@ namespace TaskSystem
         [SerializeField] private UnityEvent onSimulationFailed;
         [SerializeField] private UnityEvent onSimulationStopped;
         [SerializeField] private SimTaskChangedEvent onCurrentTaskChanged;
+        [SerializeField] private SimTaskChangedEvent onTaskCompleted;
+        [SerializeField] private SimTaskObjectiveChangedEvent onObjectiveProgressChanged;
+        [SerializeField] private SimTaskObjectiveChangedEvent onObjectiveCompleted;
         [SerializeField] private SimManagerStateChangedEvent onSimulationStateChanged;
 
         private SimulationState _state = SimulationState.Idle;
@@ -68,8 +74,12 @@ namespace TaskSystem
 
         public event Action<SimTask> LogicalTaskStarted;
         public event Action<SimTask> LogicalTaskEnded;
+        public event Action<SimTask> LogicalTaskCompleted;
         public event Action<SimTask, string> LogicalTaskFailed;
         public event Action<SimTask, SimTaskObjective> LogicalTaskStepChanged;
+        public event Action<SimTask, SimTaskObjective> LogicalTaskObjectiveProgressChanged;
+        public event Action<SimTask, SimTaskObjective> LogicalTaskObjectiveCompleted;
+        public event Action<SimulationState> SimulationStateChanged;
 
         public IReadOnlyList<SimTask> Tasks => tasks;
         public SimulationState State => _state;
@@ -329,6 +339,8 @@ namespace TaskSystem
                 return;
             }
 
+            LogicalTaskCompleted?.Invoke(task);
+            onTaskCompleted?.Invoke(task);
             LogicalTaskEnded?.Invoke(task);
             _currentTaskDriver?.OnTaskCompleted();
             UnbindCurrentTaskDriver(notifyStopped: false);
@@ -412,6 +424,28 @@ namespace TaskSystem
             _currentTaskDriver?.OnStepChanged(currentObjective, task.CurrentObjectiveIndex);
         }
 
+        private void HandleTaskObjectiveProgressChanged(SimTask task, SimTaskObjective objective)
+        {
+            if (task == null || task != CurrentTask)
+            {
+                return;
+            }
+
+            LogicalTaskObjectiveProgressChanged?.Invoke(task, objective);
+            onObjectiveProgressChanged?.Invoke(objective);
+        }
+
+        private void HandleTaskObjectiveCompleted(SimTask task, SimTaskObjective objective)
+        {
+            if (task == null || task != CurrentTask)
+            {
+                return;
+            }
+
+            LogicalTaskObjectiveCompleted?.Invoke(task, objective);
+            onObjectiveCompleted?.Invoke(objective);
+        }
+
         private void SubscribeToTasks()
         {
             for (int index = 0; index < tasks.Count; index++)
@@ -425,9 +459,13 @@ namespace TaskSystem
                 task.Ended -= HandleTaskEnded;
                 task.Failed -= HandleTaskFailed;
                 task.CurrentObjectiveChanged -= HandleTaskObjectiveChanged;
+                task.ObjectiveProgressChanged -= HandleTaskObjectiveProgressChanged;
+                task.ObjectiveCompleted -= HandleTaskObjectiveCompleted;
                 task.Ended += HandleTaskEnded;
                 task.Failed += HandleTaskFailed;
                 task.CurrentObjectiveChanged += HandleTaskObjectiveChanged;
+                task.ObjectiveProgressChanged += HandleTaskObjectiveProgressChanged;
+                task.ObjectiveCompleted += HandleTaskObjectiveCompleted;
             }
         }
 
@@ -444,6 +482,8 @@ namespace TaskSystem
                 task.Ended -= HandleTaskEnded;
                 task.Failed -= HandleTaskFailed;
                 task.CurrentObjectiveChanged -= HandleTaskObjectiveChanged;
+                task.ObjectiveProgressChanged -= HandleTaskObjectiveProgressChanged;
+                task.ObjectiveCompleted -= HandleTaskObjectiveCompleted;
             }
         }
 
@@ -455,6 +495,7 @@ namespace TaskSystem
             }
 
             _state = newState;
+            SimulationStateChanged?.Invoke(_state);
             onSimulationStateChanged?.Invoke(_state);
         }
 
@@ -514,6 +555,10 @@ namespace TaskSystem
             }
 
             _currentTaskDriver.Bind(this, task);
+            if (_currentTaskDriver is SimTaskDriver simTaskDriver)
+            {
+                simTaskDriver.DifficultyLevel = task.DifficultyProfileLevel;
+            }
         }
 
         private void UnbindCurrentTaskDriver(bool notifyStopped)

@@ -1,0 +1,368 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 207aa7c5a753d2544869f4bfeed91dde, type: 3}
+  m_Name: GardenEventSoundLibrary
+  m_EditorClassIdentifier: 
+  sounds:
+  - eventId: objective.completed
+    audioClips:
+    - {fileID: 8300000, guid: cb42660d9686a9e4eb0637e144f56e98, type: 3}
+    volume: 0.65
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: sim.started
+    audioClips:
+    - {fileID: 8300000, guid: 2c96591e495e2684ab1cc6670745fae4, type: 3}
+    volume: 0.55
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 0
+    minCooldownSeconds: 0.5
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 0
+    minCooldownSeconds: 0.5
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: objective.progress_tick
+    audioClips: []
+    volume: 0.45
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 0
+    minCooldownSeconds: 1.5
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.water.can_grabbed
+    audioClips:
+    - {fileID: 8300000, guid: 2a18593986fbc1c45a5e4e60b6599c8c, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.15
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.water.can_returned
+    audioClips:
+    - {fileID: 8300000, guid: 118a7e3de3484dc44b866a2dee982fb0, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.15
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.water.pouring_loop
+    audioClips:
+    - {fileID: 8300000, guid: 684f56b2a9dca3d419a4510b5b6305a5, type: 3}
+    volume: 0.45
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 1
+    minCooldownSeconds: 0.2
+    category: 2
+    playbackMode: 1
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.water.plant_watered
+    audioClips: []
+    volume: 0.45
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 1
+    minCooldownSeconds: 0.25
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.seed.grabbed
+    audioClips:
+    - {fileID: 8300000, guid: 3b5857380941b7f4687ac35a30a743c9, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.1
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.seed.thrown
+    audioClips:
+    - {fileID: 8300000, guid: b354357ef345f7446b207dc66d4ee44b, type: 3}
+    volume: 0.65
+    minPitch: 0.95
+    maxPitch: 1.08
+    spatialBlend: 1
+    minCooldownSeconds: 0.1
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.seed.planted
+    audioClips:
+    - {fileID: 8300000, guid: 2c96591e495e2684ab1cc6670745fae4, type: 3}
+    volume: 0.55
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 1
+    minCooldownSeconds: 0.2
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.seed.missed
+    audioClips: []
+    volume: 0.5
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 1
+    minCooldownSeconds: 0.35
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.bucket.grabbed
+    audioClips:
+    - {fileID: 8300000, guid: 2a18593986fbc1c45a5e4e60b6599c8c, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.15
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.bucket.returned
+    audioClips:
+    - {fileID: 8300000, guid: 118a7e3de3484dc44b866a2dee982fb0, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.15
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.leaf.caught
+    audioClips:
+    - {fileID: 8300000, guid: 2c96591e495e2684ab1cc6670745fae4, type: 3}
+    volume: 0.4
+    minPitch: 0.98
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.08
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.hoe.grabbed
+    audioClips:
+    - {fileID: 8300000, guid: 2a18593986fbc1c45a5e4e60b6599c8c, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.15
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.hoe.returned
+    audioClips:
+    - {fileID: 8300000, guid: 118a7e3de3484dc44b866a2dee982fb0, type: 3}
+    volume: 0.7
+    minPitch: 0.95
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 0.15
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.rake.scrape
+    audioClips: []
+    volume: 0.35
+    minPitch: 0.95
+    maxPitch: 1.08
+    spatialBlend: 1
+    minCooldownSeconds: 0.12
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.leaf.raked
+    audioClips: []
+    volume: 0.45
+    minPitch: 0.98
+    maxPitch: 1.05
+    spatialBlend: 1
+    minCooldownSeconds: 1.5
+    category: 2
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.task.water_plants.started
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.water_plants.started
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.task.water_plants.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.water_plants.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.task.throw_seeds.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.throw_seeds.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.task.catch_leafs.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.catch_leafs.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: garden.task.rake_leaves.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.rake_leaves.completed
+    audioClips:
+    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1

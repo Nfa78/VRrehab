@@ -1,0 +1,158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 207aa7c5a753d2544869f4bfeed91dde, type: 3}
+  m_Name: SharedEventSoundLibrary
+  m_EditorClassIdentifier: 
+  sounds:
+  - eventId: ui.button.click
+    audioClips: []
+    volume: 0.55
+    minPitch: 0.96
+    maxPitch: 1.04
+    spatialBlend: 0
+    minCooldownSeconds: 0.03
+    category: 0
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: ui.button.error
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.35
+    category: 0
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.started
+    audioClips: []
+    volume: 0.7
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.paused
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.2
+    category: 0
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.resumed
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.2
+    category: 0
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.completed
+    audioClips: []
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.failed
+    audioClips: []
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: sim.stopped
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 0
+  - eventId: task.started
+    audioClips: []
+    volume: 0.55
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.completed
+    audioClips: []
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: task.failed
+    audioClips: []
+    volume: 0.75
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: objective.completed
+    audioClips: []
+    volume: 0.65
+    minPitch: 1
+    maxPitch: 1
+    spatialBlend: 0
+    minCooldownSeconds: 0.25
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
+  - eventId: objective.progress_tick
+    audioClips: []
+    volume: 0.45
+    minPitch: 0.98
+    maxPitch: 1.02
+    spatialBlend: 0
+    minCooldownSeconds: 1.5
+    category: 1
+    playbackMode: 0
+    outputMixerGroup: {fileID: 0}
+    respectSimulationPause: 1
