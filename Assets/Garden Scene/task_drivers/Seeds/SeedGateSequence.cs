@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TaskSystem;
 using UnityEngine;
@@ -5,6 +6,11 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class SeedGateSequence : MonoBehaviour
 {
+    public event Action<int, int> GateSequenceProgressed;
+    public event Action<int> ThrowSequenceSucceeded;
+    public event Action ThrowSequenceWrongGateRejected;
+    public event Action<string, int, int> ThrowSequenceReset;
+
     [Header("Rings")]
     [SerializeField] private List<SeedGate> orderedGates = new List<SeedGate>();
     [SerializeField] private List<TSSeedGate> orderedTsGates = new List<TSSeedGate>();
@@ -23,6 +29,7 @@ public class SeedGateSequence : MonoBehaviour
     [SerializeField] private bool uniqueGatePerThrow = true;
     [SerializeField][Min(0)] private int activeGateCountOverride;
 
+    private float committedThrowProgress;
     private readonly List<Renderer> gateRenderers = new List<Renderer>();
     private readonly List<Collider> gateColliders = new List<Collider>();
     private int nextGateIndex;
@@ -31,12 +38,14 @@ public class SeedGateSequence : MonoBehaviour
     private bool gatesVisible = true;
     private bool UseTsGates => orderedTsGates != null && orderedTsGates.Count > 0;
 
+    public int ActiveGateCount => GetActiveGateCount();
+
     private void OnEnable()
     {
         ResolveReferences();
         CacheGateObjects();
         Subscribe();
-        ResetSequence();
+        ResetSequence("enable");
         RefreshGateVisibility(true);
     }
 
@@ -53,7 +62,7 @@ public class SeedGateSequence : MonoBehaviour
             nextGateIndex > 0 &&
             Time.time - lastGatePassTime > maxSecondsBetweenGates)
         {
-            ResetSequence();
+            ResetSequence("timeout", syncTaskProgress: true);
         }
     }
 
@@ -149,9 +158,10 @@ public class SeedGateSequence : MonoBehaviour
 
         if (!IsExpectedGate(gate))
         {
+            ThrowSequenceWrongGateRejected?.Invoke();
             if (resetSequenceOnWrongGate)
             {
-                ResetSequence();
+                ResetSequence("wrong_gate", syncTaskProgress: true);
             }
 
             return;
@@ -159,14 +169,16 @@ public class SeedGateSequence : MonoBehaviour
 
         nextGateIndex++;
         lastGatePassTime = Time.time;
+        GateSequenceProgressed?.Invoke(nextGateIndex, GetActiveGateCount());
 
         if (nextGateIndex < GetActiveGateCount())
         {
+            SyncThrowObjectiveProgress();
             return;
         }
 
         ReportSuccess();
-        ResetSequence();
+        ResetSequence("success", syncTaskProgress: false);
     }
 
     public void ApplyDifficulty(int activeGateCount, bool shouldResetSequenceOnWrongGate, float gateRadiusScale)
@@ -174,7 +186,7 @@ public class SeedGateSequence : MonoBehaviour
         activeGateCountOverride = Mathf.Max(0, activeGateCount);
         resetSequenceOnWrongGate = shouldResetSequenceOnWrongGate;
         ApplyGateRadiusScale(gateRadiusScale);
-        ResetSequence();
+        ResetSequence("difficulty", syncTaskProgress: true);
         RefreshGateVisibility(true);
     }
 
@@ -191,15 +203,28 @@ public class SeedGateSequence : MonoBehaviour
         }
         else if (addProgressOnSuccess)
         {
-            taskDriver.HandleThrowSuccess(successProgressDelta);
+            committedThrowProgress += Mathf.Max(0f, successProgressDelta);
+            taskDriver.SetThrowProgress(committedThrowProgress);
+            committedThrowProgress = ResolveCommittedThrowProgress(taskDriver.GetThrowProgressValue());
         }
+
+        ThrowSequenceSucceeded?.Invoke(GetActiveGateCount());
     }
 
-    private void ResetSequence()
+    private void ResetSequence(string reason, bool syncTaskProgress = false)
     {
+        int previousGateDepth = nextGateIndex;
+        int activeGateCount = GetActiveGateCount();
         nextGateIndex = 0;
         activeThrowId = -1;
         lastGatePassTime = -999f;
+
+        if (syncTaskProgress)
+        {
+            SyncThrowObjectiveProgress();
+        }
+
+        ThrowSequenceReset?.Invoke(reason ?? string.Empty, previousGateDepth, activeGateCount);
     }
 
     private void RefreshGateVisibility(bool force)
@@ -213,9 +238,15 @@ public class SeedGateSequence : MonoBehaviour
         gatesVisible = shouldShow;
         SetGateObjectsEnabled(shouldShow);
 
+        if (shouldShow)
+        {
+            SyncCommittedThrowProgressFromTask();
+        }
+
         if (!shouldShow)
         {
-            ResetSequence();
+            ResetSequence("objective_hidden", syncTaskProgress: false);
+            committedThrowProgress = 0f;
         }
     }
 
@@ -379,5 +410,41 @@ public class SeedGateSequence : MonoBehaviour
                 orderedGates[i].ApplyDifficultyRadiusScale(scale);
             }
         }
+    }
+
+    private void SyncCommittedThrowProgressFromTask()
+    {
+        if (taskDriver == null)
+        {
+            committedThrowProgress = 0f;
+            return;
+        }
+
+        committedThrowProgress = ResolveCommittedThrowProgress(taskDriver.GetThrowProgressValue());
+    }
+
+    private void SyncThrowObjectiveProgress()
+    {
+        if (taskDriver == null || !taskDriver.IsThrowStepActive() || !addProgressOnSuccess)
+        {
+            return;
+        }
+
+        int activeGateCount = GetActiveGateCount();
+        if (activeGateCount <= 0)
+        {
+            taskDriver.SetThrowProgress(committedThrowProgress);
+            return;
+        }
+
+        float normalizedSequenceProgress = Mathf.Clamp01((float)nextGateIndex / activeGateCount);
+        float totalProgress = committedThrowProgress + normalizedSequenceProgress * Mathf.Max(0f, successProgressDelta);
+        taskDriver.SetThrowProgress(totalProgress);
+    }
+
+    private float ResolveCommittedThrowProgress(float currentProgress)
+    {
+        float progressDelta = Mathf.Max(0.0001f, successProgressDelta);
+        return Mathf.Floor(Mathf.Max(0f, currentProgress) / progressDelta) * progressDelta;
     }
 }

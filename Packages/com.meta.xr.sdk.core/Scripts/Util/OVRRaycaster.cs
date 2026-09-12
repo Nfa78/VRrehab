@@ -253,7 +253,7 @@ public class OVRRaycaster : GraphicRaycaster, IPointerEnterHandler
             Graphic graphic = foundGraphics[i];
 
             // -1 means it hasn't been processed by the canvas, which means it isn't actually drawn
-            if (graphic.depth == -1 || (pointer == graphic.gameObject))
+            if (graphic.depth == -1 || !graphic.raycastTarget || (pointer == graphic.gameObject))
                 continue;
             Vector3 worldPos;
             if (RayIntersectsRectTransform(graphic.rectTransform, ray, out worldPos))

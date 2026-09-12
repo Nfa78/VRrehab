@@ -86,6 +86,7 @@ namespace AdaptiveSystem.Api
         {
             if (!loadConnectionSettingsFromJson)
             {
+                RestoreRuntimeAuthSessionIfNeeded();
                 return;
             }
 
@@ -97,6 +98,7 @@ namespace AdaptiveSystem.Api
             }
 
             ApplyConnectionSettings(connectionSettings);
+            RestoreRuntimeAuthSessionIfNeeded();
         }
 
         public string GetConnectionSettingsFilePath()
@@ -336,6 +338,33 @@ namespace AdaptiveSystem.Api
         public void ClearAuthSession()
         {
             authSession = new AuthSessionResponse();
+            AdaptiveRuntimeContext.ClearAuthSession();
+        }
+
+        public AuthSessionResponse GetAuthSessionCopy()
+        {
+            return AdaptiveRuntimeContext.GetAuthSessionCopy();
+        }
+
+        public void RestoreAuthSession(AuthSessionResponse session)
+        {
+            StoreAuthSession(session);
+        }
+
+        public void RestoreRuntimeAuthSessionIfNeeded()
+        {
+            if (HasAccessToken)
+            {
+                AdaptiveRuntimeContext.SetAuthSession(authSession);
+                return;
+            }
+
+            if (!AdaptiveRuntimeContext.HasAuthSession)
+            {
+                return;
+            }
+
+            StoreAuthSession(AdaptiveRuntimeContext.GetAuthSessionCopy());
         }
 
         private IEnumerator SendRequest<T>(RequestScope scope, string relativePath, string method, object body, Action<ApiResult<T>> onComplete)
@@ -421,6 +450,7 @@ namespace AdaptiveSystem.Api
             authSession.expires_at = session.expires_at;
             authSession.refresh_token = session.refresh_token;
             authSession.user = session.user;
+            AdaptiveRuntimeContext.SetAuthSession(authSession);
         }
 
         private bool TryReadConnectionSettings(out ConnectionSettings settings, out string error)

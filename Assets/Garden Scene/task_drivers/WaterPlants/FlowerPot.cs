@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using TaskSystem;
 using UnityEngine;
 
@@ -11,6 +12,11 @@ public class FlowerPot : MonoBehaviour
 
     private float nextAllowedHitTime;
     private readonly List<ColliderSizeState> colliderSizeStates = new List<ColliderSizeState>();
+    private readonly List<ParticleCollisionEvent> collisionEvents = new List<ParticleCollisionEvent>(16);
+
+    public event Action<FlowerPot, int> WaterParticlesCollided;
+
+    public string ObjectiveId => simObjectiveInteraction != null ? simObjectiveInteraction.ObjectiveId : string.Empty;
 
     private void Awake()
     {
@@ -103,6 +109,12 @@ public class FlowerPot : MonoBehaviour
             return;
         }
 
+        int rawHitCount = ResolveRawHitCount(waterParticles);
+        if (rawHitCount > 0)
+        {
+            WaterParticlesCollided?.Invoke(this, rawHitCount);
+        }
+
         if (Time.time < nextAllowedHitTime)
         {
             return;
@@ -122,14 +134,25 @@ public class FlowerPot : MonoBehaviour
 
         string targetStepId = simObjectiveInteraction != null ? simObjectiveInteraction.ObjectiveId : string.Empty;
         bool updated = taskDriver != null
-            ? taskDriver.WaterPlant(targetStepId)
-            : simObjectiveInteraction.AddObjectiveProgress(1f);
+            ? taskDriver.WaterPlant(targetStepId, particleHitCooldown)
+            : simObjectiveInteraction.AddObjectiveProgress(particleHitCooldown);
         if (logWaterHits)
         {
             Debug.Log(
                 $"[FlowerPot] Water particle hit from {other.name}. Water task update {(updated ? "succeeded" : "was rejected")}.",
                 this);
         }
+    }
+
+    private int ResolveRawHitCount(ParticleSystem waterParticles)
+    {
+        if (waterParticles == null)
+        {
+            return 0;
+        }
+
+        collisionEvents.Clear();
+        return waterParticles.GetCollisionEvents(gameObject, collisionEvents);
     }
 
     private void CacheColliderSizeStatesIfNeeded()

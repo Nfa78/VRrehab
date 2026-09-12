@@ -22,6 +22,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM && UNITY_NEW_INPUT_SYSTEM_INSTALLED
+using UnityEngine.InputSystem;
+#endif
 
 namespace UnityEngine.EventSystems
 {
@@ -35,6 +38,64 @@ namespace UnityEngine.EventSystems
         public Transform rayTransform;
 
         public OVRCursor m_Cursor;
+
+        [Tooltip("Log pointer press/release targets while testing UI in the Editor.")]
+        public bool logPointerClicks;
+
+        [Header("Editor Mouse")]
+        [Tooltip("In the Editor, use the Game view mouse position for this module's UI ray and clicks. Has no effect on device.")]
+        public bool useEditorMouse;
+        public Camera editorMouseCamera;
+        public bool IsEditorMouseActive { get; private set; }
+
+        private Ray editorMouseRay;
+        private PointerEventData.FramePressState editorMousePressState;
+        private Vector2 editorMouseScroll;
+
+        private bool UpdateEditorMouse()
+        {
+#if UNITY_EDITOR
+            if (!useEditorMouse || !Application.isFocused)
+                return false;
+
+            var camera = editorMouseCamera != null ? editorMouseCamera : Camera.main;
+            if (camera == null)
+                return false;
+
+            Vector2 position;
+            bool pressed;
+            bool released;
+#if ENABLE_INPUT_SYSTEM && UNITY_NEW_INPUT_SYSTEM_INSTALLED
+            var mouse = Mouse.current;
+            if (mouse == null)
+                return false;
+            position = mouse.position.ReadValue();
+            pressed = mouse.leftButton.wasPressedThisFrame;
+            released = mouse.leftButton.wasReleasedThisFrame;
+            editorMouseScroll = mouse.scroll.ReadValue() / 120f;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            if (!Input.mousePresent)
+                return false;
+            position = Input.mousePosition;
+            pressed = Input.GetMouseButtonDown(0);
+            released = Input.GetMouseButtonUp(0);
+            editorMouseScroll = Input.mouseScrollDelta;
+#else
+            return false;
+#endif
+#if ENABLE_INPUT_SYSTEM && UNITY_NEW_INPUT_SYSTEM_INSTALLED || ENABLE_LEGACY_INPUT_MANAGER
+            editorMouseCamera = camera;
+            editorMouseRay = camera.ScreenPointToRay(position);
+            editorMousePressState = pressed && released ? PointerEventData.FramePressState.PressedAndReleased
+                : pressed ? PointerEventData.FramePressState.Pressed
+                : released ? PointerEventData.FramePressState.Released
+                : PointerEventData.FramePressState.NotChanged;
+            return true;
+#endif
+#else
+            return false;
+#endif
+        }
 
         [Tooltip("Gamepad button to act as gaze click")]
         public OVRInput.Button joyPadClickButton = OVRInput.Button.One;
@@ -226,13 +287,30 @@ namespace UnityEngine.EventSystems
             // Check for mouse presence instead of whether touch is supported,
             // as you can connect mouse to a tablet and in that case we'd want
             // to use StandaloneInputModule for non-touch input events.
-            return m_AllowActivationOnMobileDevice || Input.mousePresent;
+            if (m_AllowActivationOnMobileDevice)
+                return true;
+#if ENABLE_INPUT_SYSTEM && UNITY_NEW_INPUT_SYSTEM_INSTALLED
+            return Mouse.current != null;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            return Input.mousePresent;
+#else
+            return false;
+#endif
         }
 
         public override bool ShouldActivateModule()
         {
             if (!base.ShouldActivateModule())
                 return false;
+
+            foreach (var source in _trackedInputSources)
+                if (source.IsValid() && source.IsActive())
+                    return true;
+
+#if UNITY_EDITOR
+            if (useEditorMouse)
+                return true;
+#endif
 
 #if ENABLE_LEGACY_INPUT_MANAGER
             var shouldActivate = Input.GetButtonDown(m_SubmitButton);
@@ -265,6 +343,7 @@ namespace UnityEngine.EventSystems
         public override void DeactivateModule()
         {
             base.DeactivateModule();
+            IsEditorMouseActive = false;
             ClearSelection();
         }
 
@@ -396,6 +475,13 @@ namespace UnityEngine.EventSystems
                 if (newPressed == null)
                     newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
+#if UNITY_EDITOR
+                if (logPointerClicks)
+                    Debug.Log($"[MenuUIPointer] Press hit={currentOverGo?.name ?? "<none>"} "
+                        + $"handler={newPressed?.name ?? "<none>"} "
+                        + $"position={pointerEvent.pointerCurrentRaycast.worldPosition}", this);
+#endif
+
                 // Debug.Log("Pressed: " + newPressed);
 
                 // Prevent triggering multiple clicks on the same object on the same frame.
@@ -437,6 +523,11 @@ namespace UnityEngine.EventSystems
             // PointerUp notification
             if (data.ReleasedThisFrame())
             {
+#if UNITY_EDITOR
+                if (logPointerClicks)
+                    Debug.Log($"[MenuUIPointer] Release hit={currentOverGo?.name ?? "<none>"} "
+                        + $"pressed={pointerEvent.pointerPress?.name ?? "<none>"}", this);
+#endif
                 // Debug.Log("Executing pressup on: " + pointer.pointerPress);
                 ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
 
@@ -523,6 +614,16 @@ namespace UnityEngine.EventSystems
         {
             bool usedEvent = SendUpdateEventToSelectedObject();
 
+            IsEditorMouseActive = UpdateEditorMouse();
+            if (IsEditorMouseActive)
+            {
+                // One world-space ray owns hover, clicks and the cursor. Do not also
+                // process the legacy camera-to-cursor mouse ray or controller clicks.
+                ProcessMouseEvent(GetMouseStateFromRaycast(editorMouseCamera.transform));
+                _objectsHitThisFrame.Clear();
+                return;
+            }
+
             if (eventSystem.sendNavigationEvents)
             {
                 if (!usedEvent)
@@ -551,7 +652,7 @@ namespace UnityEngine.EventSystems
             }
 
             _objectsHitThisFrame.Clear();
-#if !UNITY_ANDROID
+#if ENABLE_LEGACY_INPUT_MANAGER && (!UNITY_ANDROID || UNITY_EDITOR)
             ProcessMouseEvent(GetCanvasPointerData());
 #endif
         }
@@ -721,6 +822,15 @@ namespace UnityEngine.EventSystems
                 eventSystem.RaycastAll(leftData, m_RaycastResultCache);
                 var raycast = FindFirstRaycast(m_RaycastResultCache);
                 leftData.pointerCurrentRaycast = raycast;
+#if UNITY_EDITOR
+                if (logPointerClicks)
+                {
+                    Debug.Log($"[MenuUIPointer][RAY] source={inputSource.GetType().Name} id={id} "
+                        + $"origin={leftData.worldSpaceRay.origin} direction={leftData.worldSpaceRay.direction} "
+                        + $"hit={raycast.gameObject?.name ?? "<none>"} distance={raycast.distance:0.000} "
+                        + $"module={raycast.module?.GetType().Name ?? "<none>"}", this);
+                }
+#endif
                 m_RaycastResultCache.Clear();
                 rayData.IsOverCanvas = raycast.isValid;
                 if (rayData.IsOverCanvas)
@@ -802,6 +912,15 @@ namespace UnityEngine.EventSystems
             PointerEventData.FramePressState pressedState = PointerEventData.FramePressState.NotChanged;
             bool pressed = inputSource.IsPressed();
             bool released = inputSource.IsReleased();
+#if UNITY_EDITOR
+            if (logPointerClicks)
+            {
+                Debug.Log($"[MenuUIPointer][STATE] source={inputSource.GetType().Name} id={id} "
+                    + $"pressed={pressed} released={released} active={inputSource.IsActive()} "
+                    + $"hit={leftData.pointerCurrentRaycast.gameObject?.name ?? "<none>"} "
+                    + $"pointerEnter={leftData.pointerEnter?.name ?? "<none>"}", this);
+            }
+#endif
             if (pressed)
             {
                 if (released)
@@ -846,10 +965,10 @@ namespace UnityEngine.EventSystems
             leftData.Reset();
 
             //Now set the world space ray. This ray is what the user uses to point at UI elements
-            leftData.worldSpaceRay = new Ray(rayOrigin.position, rayOrigin.forward);
+            leftData.worldSpaceRay = IsEditorMouseActive ? editorMouseRay : new Ray(rayOrigin.position, rayOrigin.forward);
             // Since we're using this for hand pinches too, we should probably look at that?
 
-            leftData.scrollDelta = GetExtraScrollDelta();
+            leftData.scrollDelta = IsEditorMouseActive ? editorMouseScroll : GetExtraScrollDelta();
 
             //Populate some default values
             leftData.button = PointerEventData.InputButton.Left;
@@ -858,6 +977,15 @@ namespace UnityEngine.EventSystems
             eventSystem.RaycastAll(leftData, m_RaycastResultCache);
             var raycast = FindFirstRaycast(m_RaycastResultCache);
             leftData.pointerCurrentRaycast = raycast;
+#if UNITY_EDITOR
+            if (logPointerClicks)
+            {
+                Debug.Log($"[MenuUIPointer][RAY] source={(IsEditorMouseActive ? "EditorMouse" : "Gaze")} "
+                    + $"id={kMouseLeftId} origin={leftData.worldSpaceRay.origin} "
+                    + $"direction={leftData.worldSpaceRay.direction} hit={raycast.gameObject?.name ?? "<none>"} "
+                    + $"distance={raycast.distance:0.000} module={raycast.module?.GetType().Name ?? "<none>"}", this);
+            }
+#endif
             m_RaycastResultCache.Clear();
 
             if (m_Cursor)
@@ -932,7 +1060,7 @@ namespace UnityEngine.EventSystems
 
 
             m_MouseState.SetButtonState(PointerEventData.InputButton.Left,
-                GetGazeButtonState(), leftData);
+                IsEditorMouseActive ? editorMousePressState : GetGazeButtonState(), leftData);
             m_MouseState.SetButtonState(PointerEventData.InputButton.Right,
                 PointerEventData.FramePressState.NotChanged, rightData);
             m_MouseState.SetButtonState(PointerEventData.InputButton.Middle,
@@ -1178,6 +1306,26 @@ namespace UnityEngine.EventSystems
             {
                 _pendingInputSources.Add(hand);
             }
+        }
+
+        public static void CancelInputSource(InputSource source)
+        {
+            if (!instance)
+                return;
+            var id = instance._trackedInputSources.IndexOf(source);
+            if (id < 0 || !instance.m_VRRayPointerData.TryGetValue(id, out var data))
+                return;
+
+            // Tracking loss ends the press/drag without generating a click on stale geometry.
+            ExecuteEvents.Execute(data.pointerPress, data, ExecuteEvents.pointerUpHandler);
+            if (data.dragging)
+                ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.endDragHandler);
+            instance.HandlePointerExitAndEnter(data, null);
+            data.eligibleForClick = false;
+            data.dragging = false;
+            data.pointerPress = null;
+            data.rawPointerPress = null;
+            data.pointerDrag = null;
         }
 
         public static void UntrackInputSource(InputSource hand)

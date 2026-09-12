@@ -452,6 +452,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
 
         var image = GetOrAddComponent<Image>(panel.gameObject);
         image.color = new Color(0f, 0f, 0f, 0.65f);
+        image.raycastTarget = false;
 
         var label = CreateLabel(panel.transform, "MessageLabel", string.Empty);
         var labelRect = label.GetComponent<RectTransform>();
@@ -478,6 +479,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         var indicator = GetOrCreateUiChild(template.transform, "SelectedIndicator");
         var indicatorImage = GetOrAddComponent<Image>(indicator.gameObject);
         indicatorImage.color = Color.green;
+        indicatorImage.raycastTarget = false;
         var indicatorLayout = GetOrAddComponent<LayoutElement>(indicator.gameObject);
         indicatorLayout.preferredHeight = 10f;
 
@@ -538,7 +540,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
             var raycaster = canvasRoot.GetComponent<OVRRaycaster>();
             if (raycaster != null)
             {
-                SetObjectReference(raycaster, "pointer", eventSystem.gameObject);
+                SetObjectReference(raycaster, "pointer", FindPreferredCanvasPointerTarget(eventSystem));
             }
         }
 
@@ -658,6 +660,21 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         return null;
     }
 
+    private static GameObject FindPreferredCanvasPointerTarget(EventSystem eventSystem)
+    {
+        if (eventSystem != null)
+        {
+            var inputModule = eventSystem.GetComponent<OVRInputModule>();
+            if (inputModule != null && inputModule.m_Cursor != null)
+            {
+                return inputModule.m_Cursor.gameObject;
+            }
+        }
+
+        var gazePointer = FindObjectOfType<OVRGazePointer>(true);
+        return gazePointer != null ? gazePointer.gameObject : null;
+    }
+
     private static void EnsureVerticalLayout(GameObject gameObject)
     {
         var layout = GetOrAddComponent<VerticalLayoutGroup>(gameObject);
@@ -705,6 +722,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         text.text = labelText;
         text.fontSize = 28f;
         text.alignment = TextAlignmentOptions.Center;
+        text.raycastTarget = false;
         Stretch(label.GetComponent<RectTransform>());
         return button;
     }
@@ -717,6 +735,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         text.fontSize = 28f;
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Center;
+        text.raycastTarget = false;
 
         var layoutElement = GetOrAddComponent<LayoutElement>(labelObject);
         layoutElement.preferredWidth = 600f;
@@ -729,6 +748,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         var imageObject = GetOrCreateUiChild(parent, name);
         var image = GetOrAddComponent<Image>(imageObject);
         image.color = new Color(0.35f, 0.35f, 0.35f, 0.95f);
+        image.raycastTarget = false;
 
         var layoutElement = GetOrAddComponent<LayoutElement>(imageObject);
         layoutElement.preferredWidth = size.x;
@@ -791,6 +811,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         var background = GetOrCreateUiChild(sliderObject.transform, "Background");
         var backgroundImage = GetOrAddComponent<Image>(background);
         backgroundImage.color = new Color(0.18f, 0.18f, 0.18f, 1f);
+        backgroundImage.raycastTarget = false;
         Stretch(background.GetComponent<RectTransform>(), new Vector2(0f, 8f), new Vector2(0f, -8f));
 
         var fillArea = GetOrCreateUiChild(sliderObject.transform, "Fill Area");
@@ -798,6 +819,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         var fill = GetOrCreateUiChild(fillArea.transform, "Fill");
         var fillImage = GetOrAddComponent<Image>(fill);
         fillImage.color = new Color(0.16f, 0.7f, 0.35f, 1f);
+        fillImage.raycastTarget = false;
         Stretch(fill.GetComponent<RectTransform>());
 
         var handleSlideArea = GetOrCreateUiChild(sliderObject.transform, "Handle Slide Area");
@@ -858,8 +880,60 @@ public class MenuSceneAutoSetupWindow : EditorWindow
 
     private static Transform FindPreferredUiRayTransform()
     {
+        var controllerRayTransform = FindPreferredControllerRayTransform();
+        if (controllerRayTransform != null)
+        {
+            return controllerRayTransform;
+        }
+
         var camera = FindPreferredUiCamera();
         return camera != null ? camera.transform : null;
+    }
+
+    private static Transform FindPreferredControllerRayTransform()
+    {
+        var cameraRig = Object.FindObjectOfType<OVRCameraRig>(true);
+        if (cameraRig != null)
+        {
+            if (cameraRig.rightControllerAnchor != null)
+            {
+                return cameraRig.rightControllerAnchor;
+            }
+
+            if (cameraRig.leftControllerAnchor != null)
+            {
+                return cameraRig.leftControllerAnchor;
+            }
+
+            if (cameraRig.rightHandAnchor != null)
+            {
+                return cameraRig.rightHandAnchor;
+            }
+
+            if (cameraRig.leftHandAnchor != null)
+            {
+                return cameraRig.leftHandAnchor;
+            }
+        }
+
+        return FindSceneTransformByName("RightControllerAnchor")
+            ?? FindSceneTransformByName("LeftControllerAnchor")
+            ?? FindSceneTransformByName("RightHandAnchor")
+            ?? FindSceneTransformByName("LeftHandAnchor");
+    }
+
+    private static Transform FindSceneTransformByName(string transformName)
+    {
+        var transforms = Object.FindObjectsOfType<Transform>(true);
+        for (var i = 0; i < transforms.Length; i++)
+        {
+            if (transforms[i] != null && transforms[i].name == transformName)
+            {
+                return transforms[i];
+            }
+        }
+
+        return null;
     }
 
     private static void Stretch(RectTransform rectTransform)

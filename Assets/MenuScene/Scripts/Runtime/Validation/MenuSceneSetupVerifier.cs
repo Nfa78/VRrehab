@@ -8,6 +8,7 @@ namespace VRStrokeRehab.MenuScene
 {
     public class MenuSceneSetupVerifier : MonoBehaviour
     {
+        [SerializeField] private EventSystem menuEventSystem;
         [SerializeField] private MenuFlowController menuFlowController;
         [SerializeField] private MenuAuthController menuAuthController;
         [SerializeField] private SceneCarouselController sceneCarouselController;
@@ -21,6 +22,11 @@ namespace VRStrokeRehab.MenuScene
         [SerializeField] private MenuFeedbackController feedbackController;
         [SerializeField] private AdaptiveApiClient adaptiveApiClient;
         [SerializeField] private bool logValidationOnStartInDevelopment = true;
+        [SerializeField] private bool applyRuntimePointerSetup = true;
+        [SerializeField] private bool keepCursorVisibleInMenu = true;
+        [SerializeField] private float menuCursorFallbackDepth = 1.2f;
+
+        private DrawPointerForUI uiLaserPointer;
 
         private void Reset()
         {
@@ -29,10 +35,17 @@ namespace VRStrokeRehab.MenuScene
 
         private void Start()
         {
+            ApplyRuntimePointerSetupIfNeeded();
+
             if (logValidationOnStartInDevelopment && Debug.isDebugBuild)
             {
                 ValidateAndLog();
             }
+        }
+
+        private void LateUpdate()
+        {
+            ApplyRuntimePointerSetupIfNeeded();
         }
 
         [ContextMenu("Validate Menu Scene Setup")]
@@ -169,6 +182,117 @@ namespace VRStrokeRehab.MenuScene
             {
                 adaptiveApiClient = GetComponentInChildren<AdaptiveApiClient>(true);
             }
+
+            if (uiLaserPointer == null)
+            {
+                uiLaserPointer = FindObjectOfType<DrawPointerForUI>(true);
+            }
+        }
+
+        private void ApplyRuntimePointerSetupIfNeeded()
+        {
+            if (!applyRuntimePointerSetup)
+            {
+                return;
+            }
+
+            var eventSystem = menuEventSystem != null ? menuEventSystem : EventSystem.current;
+            if (eventSystem == null)
+            {
+                return;
+            }
+
+            var ovrInputModule = eventSystem.GetComponent<OVRInputModule>();
+            if (ovrInputModule == null)
+            {
+                return;
+            }
+
+            var laserOwnsRay = uiLaserPointer != null && uiLaserPointer.isActiveAndEnabled && uiLaserPointer.SyncsUiRay;
+            var xrPointer = eventSystem.GetComponent<MenuOpenXrPointer>();
+            var xrOwnsRay = xrPointer != null && xrPointer.isActiveAndEnabled;
+            if (xrOwnsRay)
+            {
+                // Registered aim-pose input owns the ray and cursor. In particular,
+                // do not replace it with a head/grip fallback while tracking is unavailable.
+                ovrInputModule.rayTransform = null;
+            }
+            if (!laserOwnsRay && !xrOwnsRay)
+            {
+                var preferredRay = FindPreferredPointerRayTransform();
+#if UNITY_EDITOR
+                if (ovrInputModule.useEditorMouse)
+                {
+                    var mouseCamera = ovrInputModule.editorMouseCamera != null
+                        ? ovrInputModule.editorMouseCamera : FindPreferredUiCamera();
+                    preferredRay = mouseCamera != null ? mouseCamera.transform : null;
+                }
+#endif
+                if (preferredRay == null)
+                {
+                    var camera = FindPreferredUiCamera();
+                    preferredRay = camera != null ? camera.transform : null;
+                }
+
+                if (preferredRay == null)
+                {
+                    return;
+                }
+
+                if (ovrInputModule.rayTransform != preferredRay)
+                {
+                    ovrInputModule.rayTransform = preferredRay;
+                }
+
+                if (ovrInputModule.m_Cursor != null)
+                {
+                    ovrInputModule.m_Cursor.SetCursorRay(preferredRay);
+                }
+            }
+
+            ApplyRaycasterPointerSetup(eventSystem, ovrInputModule);
+
+            if (!keepCursorVisibleInMenu)
+            {
+                return;
+            }
+
+            if (ovrInputModule.m_Cursor is OVRGazePointer gazePointer)
+            {
+                gazePointer.hideByDefault = false;
+                gazePointer.defaultDepth = Mathf.Max(0.1f, menuCursorFallbackDepth);
+            }
+        }
+
+        private void ApplyRaycasterPointerSetup(EventSystem eventSystem, OVRInputModule ovrInputModule)
+        {
+            var raycasters = FindObjectsOfType<OVRRaycaster>(true);
+            if (raycasters == null || raycasters.Length == 0)
+            {
+                return;
+            }
+
+            var preferredPointer = FindPreferredCanvasPointerObject(eventSystem, ovrInputModule);
+            for (var i = 0; i < raycasters.Length; i++)
+            {
+                var raycaster = raycasters[i];
+                if (raycaster == null)
+                {
+                    continue;
+                }
+
+                if (raycaster.pointer != null
+                    && raycaster.pointer != eventSystem.gameObject
+                    && (preferredPointer == null || raycaster.pointer != preferredPointer))
+                {
+                    continue;
+                }
+
+                if (raycaster.pointer != preferredPointer)
+                {
+                    raycaster.pointer = preferredPointer;
+                }
+            }
         }
 
         private void ValidateCrossWiring(List<MenuValidationIssue> issues)
@@ -290,7 +414,7 @@ namespace VRStrokeRehab.MenuScene
 
         private void ValidateEventSystem(List<MenuValidationIssue> issues)
         {
-            var eventSystem = FindObjectOfType<EventSystem>(true);
+            var eventSystem = menuEventSystem != null ? menuEventSystem : EventSystem.current;
             if (eventSystem == null)
             {
                 issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, "Scene", "No EventSystem was found in the scene."));
@@ -332,10 +456,140 @@ namespace VRStrokeRehab.MenuScene
                 return;
             }
 
+            var xrPointer = eventSystem.GetComponent<MenuOpenXrPointer>();
+            if (xrPointer != null && xrPointer.isActiveAndEnabled)
+                return;
+
             if (ovrInputModule.rayTransform == null)
             {
                 issues.Add(new MenuValidationIssue(MenuValidationSeverity.Warning, "OVRInputModule", "rayTransform is not assigned. Pointer-based VR UI interaction may not work correctly."));
+                return;
             }
+
+            var preferredControllerRay = FindPreferredPointerRayTransform();
+#if UNITY_EDITOR
+            if (ovrInputModule.useEditorMouse)
+                return;
+#endif
+            if (preferredControllerRay != null && IsEyeAnchorTransform(ovrInputModule.rayTransform))
+            {
+                issues.Add(new MenuValidationIssue(
+                    MenuValidationSeverity.Warning,
+                    "OVRInputModule",
+                    "rayTransform is using an eye anchor while a controller anchor is available. UI ray hits can drift away from the visible controller pointer."));
+            }
+        }
+
+        private Transform FindPreferredPointerRayTransform()
+        {
+            var xrPointer = menuEventSystem != null ? menuEventSystem.GetComponent<MenuOpenXrPointer>() : null;
+            if (xrPointer != null && xrPointer.IsActive())
+                return xrPointer.GetPointerRayTransform();
+
+            if (uiLaserPointer != null
+                && uiLaserPointer.isActiveAndEnabled
+                && uiLaserPointer.SyncsUiRay
+                && uiLaserPointer.CurrentSource != null)
+            {
+                return uiLaserPointer.CurrentSource;
+            }
+
+            var cameraRig = FindObjectOfType<OVRCameraRig>(true);
+            if (cameraRig != null)
+            {
+                if (cameraRig.rightControllerAnchor != null)
+                {
+                    return cameraRig.rightControllerAnchor;
+                }
+
+                if (cameraRig.leftControllerAnchor != null)
+                {
+                    return cameraRig.leftControllerAnchor;
+                }
+
+                if (cameraRig.rightHandAnchor != null)
+                {
+                    return cameraRig.rightHandAnchor;
+                }
+
+                if (cameraRig.leftHandAnchor != null)
+                {
+                    return cameraRig.leftHandAnchor;
+                }
+            }
+
+            return FindSceneTransformByName("RightControllerAnchor")
+                ?? FindSceneTransformByName("LeftControllerAnchor")
+                ?? FindSceneTransformByName("RightHandAnchor")
+                ?? FindSceneTransformByName("LeftHandAnchor");
+        }
+
+        private static Camera FindPreferredUiCamera()
+        {
+            if (Camera.main != null)
+            {
+                return Camera.main;
+            }
+
+            return FindObjectOfType<Camera>(true);
+        }
+
+        private GameObject FindPreferredCanvasPointerObject(EventSystem eventSystem, OVRInputModule ovrInputModule)
+        {
+            if (ovrInputModule != null && ovrInputModule.m_Cursor != null)
+            {
+                return ovrInputModule.m_Cursor.gameObject;
+            }
+
+            var gazePointer = FindObjectOfType<OVRGazePointer>(true);
+            if (gazePointer != null)
+            {
+                return gazePointer.gameObject;
+            }
+
+            var preferredRay = FindPreferredPointerRayTransform();
+            if (preferredRay != null)
+            {
+                return preferredRay.gameObject;
+            }
+
+            return null;
+        }
+
+        private static bool IsEyeAnchorTransform(Transform transformToCheck)
+        {
+            if (transformToCheck == null)
+            {
+                return false;
+            }
+
+            var cameraRig = FindObjectOfType<OVRCameraRig>(true);
+            if (cameraRig != null)
+            {
+                if (transformToCheck == cameraRig.centerEyeAnchor
+                    || transformToCheck == cameraRig.leftEyeAnchor
+                    || transformToCheck == cameraRig.rightEyeAnchor)
+                {
+                    return true;
+                }
+            }
+
+            var name = transformToCheck.name;
+            return name == "CenterEyeAnchor" || name == "LeftEyeAnchor" || name == "RightEyeAnchor";
+        }
+
+        private static Transform FindSceneTransformByName(string transformName)
+        {
+            var transforms = FindObjectsOfType<Transform>(true);
+            for (var i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i] != null && transforms[i].name == transformName)
+                {
+                    return transforms[i];
+                }
+            }
+
+            return null;
         }
 
         private void ValidateCanvases(List<MenuValidationIssue> issues)
@@ -352,6 +606,8 @@ namespace VRStrokeRehab.MenuScene
             var hasOverlayCanvas = false;
             var hasOvrRaycaster = false;
             var overlayCanvasMissingWorldCamera = false;
+            var scaledOverlayUi = new List<string>();
+            var eventSystem = FindObjectOfType<EventSystem>(true);
 
             for (var i = 0; i < canvases.Length; i++)
             {
@@ -377,11 +633,29 @@ namespace VRStrokeRehab.MenuScene
                     {
                         overlayCanvasMissingWorldCamera = true;
                     }
+
+                    CollectScaledOverlayUi(canvases[i], scaledOverlayUi);
                 }
 
-                if (canvases[i].GetComponent<OVRRaycaster>() != null)
+                var ovrRaycaster = canvases[i].GetComponent<OVRRaycaster>();
+                if (ovrRaycaster != null)
                 {
                     hasOvrRaycaster = true;
+
+                    if (eventSystem != null && ovrRaycaster.pointer == eventSystem.gameObject)
+                    {
+                        issues.Add(new MenuValidationIssue(
+                            MenuValidationSeverity.Warning,
+                            "OVRRaycaster",
+                            canvases[i].name + " uses the EventSystem object as its pointer target. In editor and Meta simulator this produces a fixed camera-to-origin click ray."));
+                    }
+                    else if (ovrRaycaster.pointer == null)
+                    {
+                        issues.Add(new MenuValidationIssue(
+                            MenuValidationSeverity.Warning,
+                            "OVRRaycaster",
+                            canvases[i].name + " does not have a pointer target assigned. Editor canvas-pointer simulation will not be able to trace this canvas."));
+                    }
                 }
             }
 
@@ -409,6 +683,95 @@ namespace VRStrokeRehab.MenuScene
             {
                 issues.Add(new MenuValidationIssue(MenuValidationSeverity.Warning, "OVROverlayCanvas", "An OVROverlayCanvas is present but its Canvas.worldCamera is not assigned."));
             }
+
+            if (scaledOverlayUi.Count > 0)
+            {
+                issues.Add(new MenuValidationIssue(
+                    MenuValidationSeverity.Warning,
+                    "OVROverlayCanvas",
+                    "Scaled raycastable/interactable UI was found under an OVROverlayCanvas: "
+                    + FormatPreviewList(scaledOverlayUi, 6)
+                    + ". Treat this as a drift diagnostic only; align the active UI ray to the real pointer pose before reworking an authored layout."));
+            }
+        }
+
+        private static void CollectScaledOverlayUi(Canvas canvas, List<string> scaledOverlayUi)
+        {
+            if (canvas == null || scaledOverlayUi == null)
+            {
+                return;
+            }
+
+            var rectTransforms = canvas.GetComponentsInChildren<RectTransform>(true);
+            for (var i = 0; i < rectTransforms.Length; i++)
+            {
+                var rectTransform = rectTransforms[i];
+                if (rectTransform == null || rectTransform == canvas.transform)
+                {
+                    continue;
+                }
+
+                if (IsUnitScale(rectTransform.localScale))
+                {
+                    continue;
+                }
+
+                var selectable = rectTransform.GetComponent<Selectable>();
+                var graphic = rectTransform.GetComponent<Graphic>();
+                if (selectable == null && (graphic == null || !graphic.raycastTarget))
+                {
+                    continue;
+                }
+
+                var path = BuildRelativeTransformPath(canvas.transform, rectTransform);
+                if (!scaledOverlayUi.Contains(path))
+                {
+                    scaledOverlayUi.Add(path);
+                }
+            }
+        }
+
+        private static bool IsUnitScale(Vector3 scale)
+        {
+            return Mathf.Approximately(scale.x, 1f)
+                && Mathf.Approximately(scale.y, 1f)
+                && Mathf.Approximately(scale.z, 1f);
+        }
+
+        private static string BuildRelativeTransformPath(Transform root, Transform target)
+        {
+            if (root == null || target == null)
+            {
+                return string.Empty;
+            }
+
+            var names = new List<string>();
+            var current = target;
+            while (current != null && current != root)
+            {
+                names.Add(current.name);
+                current = current.parent;
+            }
+
+            names.Reverse();
+            return string.Join("/", names);
+        }
+
+        private static string FormatPreviewList(List<string> values, int maxCount)
+        {
+            if (values == null || values.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var count = Mathf.Min(maxCount, values.Count);
+            var preview = string.Join(", ", values.GetRange(0, count));
+            if (values.Count > count)
+            {
+                preview += ", ...";
+            }
+
+            return preview;
         }
 
         private static void Require(Object obj, string source, List<MenuValidationIssue> issues)

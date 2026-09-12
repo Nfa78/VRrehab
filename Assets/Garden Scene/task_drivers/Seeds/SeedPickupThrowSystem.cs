@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TaskSystem;
 using UnityEngine;
@@ -5,6 +6,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class SeedPickupThrowSystem : MonoBehaviour
 {
+    public event Action<int, float> ThrowBurstSpawned;
+
     [Header("State")]
     [SerializeField] private SeedPickupState pickupState;
     [SerializeField] private SeedThrowSpawner throwSpawner;
@@ -149,6 +152,7 @@ public class SeedPickupThrowSystem : MonoBehaviour
                 this);
         }
 
+        ThrowBurstSpawned?.Invoke(spawned, releaseVelocity.magnitude);
         ClearReleaseSamples();
     }
 

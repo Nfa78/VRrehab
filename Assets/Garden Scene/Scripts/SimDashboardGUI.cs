@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class SimDashboardGUI : MonoBehaviour
 {
+    private const string WaterPlantsTaskId = "water_plants";
+    private const int ProgressBarSegments = 12;
+
     [SerializeField] private SimManager simManager;
 
     public TextMeshProUGUI TaskName_UIText;
@@ -86,7 +89,7 @@ public class SimDashboardGUI : MonoBehaviour
         {
             TaskObjectiveStatus_UIText.text = objective == null
                 ? "No active objective\nProgress: -"
-                : $"{Label(objective.Title, objective.ObjectiveId)}\nProgress: {objective.CurrentValue:0.##}/{objective.MaxValue:0.##} ({objective.NormalizedProgress * 100f:0}%)";
+                : FormatObjectiveStatus(task, objective);
         }
 
         if (pause != null && pause.image != null)
@@ -98,5 +101,36 @@ public class SimDashboardGUI : MonoBehaviour
     private static string Label(string title, string id)
     {
         return string.IsNullOrWhiteSpace(title) ? id : title;
+    }
+
+    private static string FormatObjectiveStatus(SimTask task, SimTaskObjective objective)
+    {
+        if (objective == null)
+        {
+            return "No active objective\nProgress: -";
+        }
+
+        float normalizedProgress = objective.NormalizedProgress;
+        string progressBar = BuildProgressBar(normalizedProgress);
+        string percentLabel = $"{normalizedProgress * 100f:0.0}%";
+
+        if (task != null &&
+            string.Equals(task.TaskId, WaterPlantsTaskId, System.StringComparison.Ordinal) &&
+            objective.Mode == SimTaskObjective.ObjectiveMode.Counter)
+        {
+            return $"{Label(objective.Title, objective.ObjectiveId)}\nWatered: {objective.CurrentValue:0.00}s/{objective.MaxValue:0.00}s {progressBar} {percentLabel}";
+        }
+
+        return $"{Label(objective.Title, objective.ObjectiveId)}\nProgress: {objective.CurrentValue:0.##}/{objective.MaxValue:0.##} {progressBar} {percentLabel}";
+    }
+
+    private static string BuildProgressBar(float normalizedProgress)
+    {
+        int filledSegments = Mathf.Clamp(
+            Mathf.RoundToInt(Mathf.Clamp01(normalizedProgress) * ProgressBarSegments),
+            0,
+            ProgressBarSegments);
+
+        return $"[{new string('#', filledSegments)}{new string('-', ProgressBarSegments - filledSegments)}]";
     }
 }

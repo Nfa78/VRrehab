@@ -7,8 +7,8 @@ public class WaterSpillSetup : MonoBehaviour
     [SerializeField] private WaterSpillTrigger waterTrigger;
     [SerializeField] private bool autoCreateParticles = true;
     [SerializeField] private bool boostParticleVisibility = true;
-    [SerializeField] private Vector3 localEmissionDirection = Vector3.forward;
-    [SerializeField] private float spawnForwardOffset = 0.005f;
+    [SerializeField] private Vector3 localEmissionDirection = new Vector3(0f, -0.2f, 1f);
+    [SerializeField] private float spawnForwardOffset = 0.02f;
     [SerializeField] private float triggerForwardOffset = 0.35f;
     [SerializeField] private float triggerLength = 1f;
     [SerializeField] private float triggerRadius = 0.2f;
@@ -145,11 +145,11 @@ public class WaterSpillSetup : MonoBehaviour
         var main = waterParticles.main;
         main.loop = true;
         main.playOnAwake = false;
-        main.startLifetime = 0.45f;
-        main.startSpeed = 3.2f;
+        main.startLifetime = 0.5f;
+        main.startSpeed = 2.5f;
         main.startSize = 0.028f;
         main.startColor = new Color(0.45f, 0.75f, 1f, 0.9f);
-        main.gravityModifier = 1.8f;
+        main.gravityModifier = 2.2f;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.maxParticles = 300;
 
@@ -160,8 +160,8 @@ public class WaterSpillSetup : MonoBehaviour
         var shape = waterParticles.shape;
         shape.enabled = true;
         shape.shapeType = ParticleSystemShapeType.Cone;
-        shape.angle = 3f;
-        shape.radius = 0.001f;
+        shape.angle = 4.5f;
+        shape.radius = 0.004f;
         shape.length = 0f;
 
         var noise = waterParticles.noise;

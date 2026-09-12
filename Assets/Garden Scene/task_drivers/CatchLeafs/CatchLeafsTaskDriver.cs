@@ -17,7 +17,25 @@ namespace TaskSystem
         [Header("Difficulty Profiles")]
         [SerializeField] private DifficultyProfile[] difficultyProfiles = CreateDefaultDifficultyProfiles();
 
+        [Header("Task Policy")]
+        [SerializeField] private bool enforceTimeLimit = true;
+
         public override string TaskId => "catch_leafs";
+        public string PickupStepId => pickupStepId;
+        public string CatchStepId => catchStepId;
+        public string ReturnStepId => returnStepId;
+
+        private void Awake()
+        {
+            EnsureTaskTracker();
+            EnsureAdaptiveReporter();
+        }
+
+        private void OnEnable()
+        {
+            EnsureTaskTracker();
+            EnsureAdaptiveReporter();
+        }
 
         public override void ApplyDifficulty(int level)
         {
@@ -28,6 +46,7 @@ namespace TaskSystem
             }
 
             SimTask?.SetTimeLimitSeconds(profile.timeLimitSeconds);
+            SimTask?.SetFailOnTimeout(enforceTimeLimit);
             SimTask?.SetObjectiveMaxValue(catchStepId, profile.requiredCaughtLeaves);
 
             ResolveDifficultyTargets();
@@ -76,6 +95,22 @@ namespace TaskSystem
             return !string.IsNullOrWhiteSpace(returnStepId) && TryCompleteStep(returnStepId);
         }
 
+        public int ClampDifficultyLevel(int level)
+        {
+            return Mathf.Clamp(level, 1, GetHighestConfiguredDifficultyLevel());
+        }
+
+        public void ApplyBackendTimeout(int timeoutSeconds)
+        {
+            if (timeoutSeconds <= 0)
+            {
+                return;
+            }
+
+            SimTask?.SetTimeLimitSeconds(timeoutSeconds);
+            SimTask?.SetFailOnTimeout(enforceTimeLimit);
+        }
+
         private void ResolveDifficultyTargets()
         {
             if (!autoFindDifficultyTargets || bucketLeafCatchSystem != null)
@@ -104,6 +139,42 @@ namespace TaskSystem
             }
 
             return difficultyProfiles[0];
+        }
+
+        private int GetHighestConfiguredDifficultyLevel()
+        {
+            if (difficultyProfiles == null || difficultyProfiles.Length == 0)
+            {
+                difficultyProfiles = CreateDefaultDifficultyProfiles();
+            }
+
+            int highestLevel = 1;
+            for (int i = 0; i < difficultyProfiles.Length; i++)
+            {
+                DifficultyProfile profile = difficultyProfiles[i];
+                if (profile != null)
+                {
+                    highestLevel = Mathf.Max(highestLevel, profile.level);
+                }
+            }
+
+            return highestLevel;
+        }
+
+        private void EnsureTaskTracker()
+        {
+            if (GetComponent<CatchLeafsTaskTracker>() == null)
+            {
+                gameObject.AddComponent<CatchLeafsTaskTracker>();
+            }
+        }
+
+        private void EnsureAdaptiveReporter()
+        {
+            if (GetComponent<CatchLeafsTaskAdaptiveReporter>() == null)
+            {
+                gameObject.AddComponent<CatchLeafsTaskAdaptiveReporter>();
+            }
         }
 
         private static DifficultyProfile[] CreateDefaultDifficultyProfiles()

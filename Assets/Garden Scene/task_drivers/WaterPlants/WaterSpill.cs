@@ -26,6 +26,8 @@ public class WaterSpill : MonoBehaviour
     [SerializeField] private bool isTilted;
     [SerializeField] private bool isSpilling;
 
+    public bool IsSpilling => isSpilling;
+
     private Vector3 previousPosition;
     private Coroutine spillRoutine;
     private bool wasGrabbedLastFrame;

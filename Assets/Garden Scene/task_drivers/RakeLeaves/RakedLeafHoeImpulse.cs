@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace TaskSystem
@@ -6,6 +7,8 @@ namespace TaskSystem
     [RequireComponent(typeof(Rigidbody))]
     public sealed class RakedLeafHoeImpulse : MonoBehaviour
     {
+        public static event Action<RakedLeafHoeImpulse, float> AnyHoeImpulseApplied;
+
         [SerializeField] private string hoeTag = "Hoe";
         [SerializeField] private float impulse = 0.18f;
         [SerializeField] private bool keepImpulseHorizontal = true;
@@ -62,6 +65,7 @@ namespace TaskSystem
 
             leafRigidbody.AddForce(direction.normalized * impulse, ForceMode.Impulse);
             lastImpulseTime = Time.time;
+            AnyHoeImpulseApplied?.Invoke(this, impulse);
 
             if (logDebug)
             {

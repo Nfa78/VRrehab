@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
@@ -38,6 +39,15 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     private bool? bucketGrabComponentsEnabled;
     private string lastLoggedTaskId;
 
+    public event Action<bool> BucketGrabStateChanged;
+    public event Action<LeafsFallingEffect, bool> LeafCatchProcessed;
+    public event Action<LeafsFallingEffect> LeafMissed;
+    public event Action<LeafsFallingEffect> LeafRespawned;
+
+    public Transform BucketTransform => transform;
+    public bool IsBucketGrabbed => IsCurrentlyGrabbed();
+    public int ConfiguredLeafCount => leaves.Count;
+
     public void ApplyDifficulty(
         float newLeafRespawnDelaySeconds,
         float newLeafFallSpeed,
@@ -69,6 +79,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     {
         ResolveReferences();
         CacheLeaves();
+        SubscribeToLeafEvents();
         SetBucketGrabComponentsEnabled(false);
         SetLeavesActive(false, true);
         wasGrabbedLastFrame = false;
@@ -76,6 +87,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
 
     private void OnDisable()
     {
+        UnsubscribeFromLeafEvents();
         SetBucketGrabComponentsEnabled(false);
         SetLeavesActive(false, true);
         wasGrabbedLastFrame = false;
@@ -108,6 +120,11 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
         }
 
         bool isGrabbed = IsCurrentlyGrabbed();
+        if (isGrabbed != wasGrabbedLastFrame)
+        {
+            BucketGrabStateChanged?.Invoke(isGrabbed);
+        }
+
         if (pickupStepActive && isGrabbed && !wasGrabbedLastFrame)
         {
             bool completed = taskDriver != null && taskDriver.CompletePickupStep();
@@ -241,6 +258,8 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
             if (leafEffects[i] != null)
             {
                 leaves.Add(new LeafRuntime(leafEffects[i]));
+                leafEffects[i].FellPastResetThreshold -= HandleLeafFellPastThreshold;
+                leafEffects[i].FellPastResetThreshold += HandleLeafFellPastThreshold;
             }
         }
     }
@@ -277,6 +296,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
 
             leaf.ResumeAtTime = 0f;
             leaf.Effect.SetSimulationActive(true, true);
+            LeafRespawned?.Invoke(leaf.Effect);
         }
     }
 
@@ -306,6 +326,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
             }
 
             bool counted = taskDriver.CatchLeaf();
+            LeafCatchProcessed?.Invoke(leaf.Effect, counted);
             leaf.Effect.SetSimulationActive(false, true);
             leaf.ResumeAtTime = Time.time + Mathf.Max(0f, leafRespawnDelaySeconds);
 
@@ -335,6 +356,47 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
         }
 
         return false;
+    }
+
+    private void SubscribeToLeafEvents()
+    {
+        for (int i = 0; i < leaves.Count; i++)
+        {
+            LeafsFallingEffect effect = leaves[i].Effect;
+            if (effect == null)
+            {
+                continue;
+            }
+
+            effect.FellPastResetThreshold -= HandleLeafFellPastThreshold;
+            effect.FellPastResetThreshold += HandleLeafFellPastThreshold;
+        }
+    }
+
+    private void UnsubscribeFromLeafEvents()
+    {
+        for (int i = 0; i < leaves.Count; i++)
+        {
+            LeafsFallingEffect effect = leaves[i].Effect;
+            if (effect != null)
+            {
+                effect.FellPastResetThreshold -= HandleLeafFellPastThreshold;
+            }
+        }
+    }
+
+    private void HandleLeafFellPastThreshold(LeafsFallingEffect effect)
+    {
+        if (!IsCurrentTask(requiredTaskId) || !IsCurrentObjective(catchObjectiveId))
+        {
+            return;
+        }
+
+        LeafMissed?.Invoke(effect);
+        if (effect != null && effect.CanResetAfterFall)
+        {
+            LeafRespawned?.Invoke(effect);
+        }
     }
 
     private bool IsCurrentTask(string taskId)

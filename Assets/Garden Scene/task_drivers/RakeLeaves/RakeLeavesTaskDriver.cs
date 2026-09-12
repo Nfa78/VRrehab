@@ -27,11 +27,24 @@ namespace TaskSystem
         [Header("Difficulty Profiles")]
         [SerializeField] private DifficultyProfile[] difficultyProfiles = CreateDefaultDifficultyProfiles();
 
+        [Header("Task Policy")]
+        [SerializeField] private bool enforceTimeLimit = true;
+
         private Pose initialHoePose;
         private bool hasInitialHoePose;
         private bool wasHoeGrabbedLastFrame;
 
+        public event Action<bool> HoeGrabStateChanged;
+        public event Action<RakedLeafProgressReporter, float> RakeProgressAccepted;
+        public event Action<float> HoeReturned;
+
         public override string TaskId => "rake_leaves";
+        public string PickupHoeStepId => pickupHoeStepId;
+        public string RakeLeavesStepId => rakeLeavesStepId;
+        public string ReturnHoeStepId => returnHoeStepId;
+        public Transform HoeTransform => hoeObject != null ? hoeObject.transform : null;
+        public bool IsHoeCurrentlyGrabbed => IsHoeGrabbed();
+        public float ReturnDistanceThreshold => Mathf.Max(0.01f, returnDistanceThreshold);
 
         public override void ApplyDifficulty(int level)
         {
@@ -42,6 +55,7 @@ namespace TaskSystem
             }
 
             SimTask?.SetTimeLimitSeconds(profile.timeLimitSeconds);
+            SimTask?.SetFailOnTimeout(enforceTimeLimit);
             SimTask?.SetObjectiveMaxValue(rakeLeavesStepId, profile.requiredRakedLeaves);
         }
 
@@ -49,12 +63,16 @@ namespace TaskSystem
         {
             ResolveHoeReferences();
             CaptureInitialHoePoseIfNeeded();
+            EnsureTaskTracker();
+            EnsureAdaptiveReporter();
         }
 
         private void OnEnable()
         {
             ResolveHoeReferences();
             CaptureInitialHoePoseIfNeeded();
+            EnsureTaskTracker();
+            EnsureAdaptiveReporter();
         }
 
         private void Update()
@@ -69,6 +87,11 @@ namespace TaskSystem
             CaptureInitialHoePoseIfNeeded();
 
             bool isHoeGrabbed = IsHoeGrabbed();
+            if (isHoeGrabbed != wasHoeGrabbedLastFrame)
+            {
+                HoeGrabStateChanged?.Invoke(isHoeGrabbed);
+            }
+
             if (IsPickupHoeStepActive() && isHoeGrabbed && !wasHoeGrabbedLastFrame)
             {
                 bool completed = CompletePickupHoeStep();
@@ -118,7 +141,12 @@ namespace TaskSystem
 
         public bool RakeLeaves(float delta = 1f)
         {
-            return !string.IsNullOrWhiteSpace(rakeLeavesStepId) && TryAddStepProgress(rakeLeavesStepId, delta);
+            return RecordRakeProgress(null, delta);
+        }
+
+        public bool RakeLeaves(RakedLeafProgressReporter source, float delta = 1f)
+        {
+            return RecordRakeProgress(source, delta);
         }
 
         public bool CollectLeaf(float delta = 1f)
@@ -129,6 +157,45 @@ namespace TaskSystem
         public bool CompleteReturnHoeStep()
         {
             return !string.IsNullOrWhiteSpace(returnHoeStepId) && TryCompleteStep(returnHoeStepId);
+        }
+
+        public int ClampDifficultyLevel(int level)
+        {
+            return Mathf.Clamp(level, 1, GetHighestConfiguredDifficultyLevel());
+        }
+
+        public void ApplyBackendTimeout(int timeoutSeconds)
+        {
+            if (timeoutSeconds <= 0)
+            {
+                return;
+            }
+
+            SimTask?.SetTimeLimitSeconds(timeoutSeconds);
+            SimTask?.SetFailOnTimeout(enforceTimeLimit);
+        }
+
+        public float DistanceFromHoeStart()
+        {
+            return hoeObject != null && hasInitialHoePose
+                ? Vector3.Distance(hoeObject.transform.position, initialHoePose.position)
+                : 0f;
+        }
+
+        private bool RecordRakeProgress(RakedLeafProgressReporter source, float delta)
+        {
+            if (string.IsNullOrWhiteSpace(rakeLeavesStepId) || delta <= 0f)
+            {
+                return false;
+            }
+
+            bool accepted = TryAddStepProgress(rakeLeavesStepId, delta);
+            if (accepted)
+            {
+                RakeProgressAccepted?.Invoke(source, delta);
+            }
+
+            return accepted;
         }
 
         private void ResolveHoeReferences()
@@ -206,6 +273,7 @@ namespace TaskSystem
                 return;
             }
 
+            HoeReturned?.Invoke(distance);
             ApplyReturnedHoePose();
             if (logDebug)
             {
@@ -258,6 +326,42 @@ namespace TaskSystem
             }
 
             return difficultyProfiles[0];
+        }
+
+        private int GetHighestConfiguredDifficultyLevel()
+        {
+            if (difficultyProfiles == null || difficultyProfiles.Length == 0)
+            {
+                difficultyProfiles = CreateDefaultDifficultyProfiles();
+            }
+
+            int highestLevel = 1;
+            for (int i = 0; i < difficultyProfiles.Length; i++)
+            {
+                DifficultyProfile profile = difficultyProfiles[i];
+                if (profile != null)
+                {
+                    highestLevel = Mathf.Max(highestLevel, profile.level);
+                }
+            }
+
+            return highestLevel;
+        }
+
+        private void EnsureTaskTracker()
+        {
+            if (GetComponent<RakeLeavesTaskTracker>() == null)
+            {
+                gameObject.AddComponent<RakeLeavesTaskTracker>();
+            }
+        }
+
+        private void EnsureAdaptiveReporter()
+        {
+            if (GetComponent<RakeLeavesTaskAdaptiveReporter>() == null)
+            {
+                gameObject.AddComponent<RakeLeavesTaskAdaptiveReporter>();
+            }
         }
 
         private static DifficultyProfile[] CreateDefaultDifficultyProfiles()

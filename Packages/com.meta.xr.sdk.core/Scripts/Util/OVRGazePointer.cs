@@ -48,6 +48,9 @@ public class OVRGazePointer : OVRCursor
 
     public bool matchNormalOnPhysicsColliders;
 
+    [Tooltip("Fallback cursor depth used before the pointer hits any UI or world geometry.")]
+    public float defaultDepth = 1.2f;
+
     /// <summary>
     /// The gaze ray.
     /// </summary>
@@ -167,6 +170,11 @@ public class OVRGazePointer : OVRCursor
         _instance = this;
 
         gazeIcon = transform.Find("GazeIcon");
+        if (gazeIcon == null)
+        {
+            gazeIcon = transform;
+        }
+
         progressIndicator = transform.GetComponent<OVRProgressIndicator>();
     }
 
@@ -175,8 +183,8 @@ public class OVRGazePointer : OVRCursor
         if (rayTransform == null && Camera.main != null)
             rayTransform = Camera.main.transform;
 
-        // Move the gaze cursor to keep it in the middle of the view
-        transform.position = rayTransform.position + rayTransform.forward * depth;
+        if (rayTransform == null)
+            return;
 
         // Should we show or hide the gaze cursor?
         if (visibilityStrength == 0 && !hidden)
@@ -196,6 +204,12 @@ public class OVRGazePointer : OVRCursor
     /// <param name="normal"></param>
     public override void SetCursorStartDest(Vector3 _, Vector3 pos, Vector3 normal)
     {
+        if (rayTransform == null && Camera.main != null)
+            rayTransform = Camera.main.transform;
+
+        if (rayTransform == null)
+            return;
+
         transform.position = pos;
 
         if (!matchNormalOnPhysicsColliders) normal = rayTransform.forward;
@@ -218,14 +232,36 @@ public class OVRGazePointer : OVRCursor
 
     public override void SetCursorRay(Transform ray)
     {
-        // We don't do anything here, because we already set this properly by default in Update.
+        if (ray != null)
+        {
+            rayTransform = ray;
+        }
     }
 
     void LateUpdate()
     {
+        if (rayTransform == null && Camera.main != null)
+            rayTransform = Camera.main.transform;
+
+        if (rayTransform == null)
+        {
+            positionSetsThisFrame = 0;
+            return;
+        }
+
         // This happens after all Updates so we know that if positionSetsThisFrame is zero then nothing set the position this frame
         if (positionSetsThisFrame == 0)
         {
+            // Only use the forward-ray fallback after input processing has finished.
+            // Update order must not overwrite a real (possibly off-axis mouse) hit.
+            var targetDepth = depth > Mathf.Epsilon ? depth : defaultDepth;
+            transform.position = rayTransform.position + rayTransform.forward * targetDepth;
+            if (depth <= Mathf.Epsilon)
+            {
+                currentScale = targetDepth * depthScaleMultiplier;
+                transform.localScale = new Vector3(currentScale, currentScale, currentScale);
+            }
+
             // No geometry intersections, so gazing into space. Make the cursor face directly at the camera
             Quaternion newRot = transform.rotation;
             newRot.SetLookRotation(rayTransform.forward, rayTransform.up);

@@ -21,6 +21,21 @@ namespace TaskSystem
         [SerializeField] private DifficultyProfile[] difficultyProfiles = CreateDefaultDifficultyProfiles();
 
         public override string TaskId => "throw_seeds";
+        public string PickupStepId => pickupStepId;
+        public string ThrowStepId => throwStepId;
+        public string ReturnStepId => returnStepId;
+
+        private void Awake()
+        {
+            EnsureTaskTracker();
+            EnsureAdaptiveReporter();
+        }
+
+        private void OnEnable()
+        {
+            EnsureTaskTracker();
+            EnsureAdaptiveReporter();
+        }
 
         public override void ApplyDifficulty(int level)
         {
@@ -63,6 +78,11 @@ namespace TaskSystem
             }
         }
 
+        public int ClampDifficultyLevel(int level)
+        {
+            return Mathf.Clamp(level, 1, GetHighestConfiguredDifficultyLevel());
+        }
+
         public bool AllowsSeedInteraction()
         {
             return IsActiveStep(pickupStepId) || IsActiveStep(throwStepId);
@@ -85,7 +105,13 @@ namespace TaskSystem
 
         public bool HandleThrowSuccess(float delta = 1f)
         {
-            return !string.IsNullOrWhiteSpace(throwStepId) && TryAddStepProgress(throwStepId, delta);
+            if (string.IsNullOrWhiteSpace(throwStepId))
+            {
+                return false;
+            }
+
+            float nextProgress = GetThrowProgressValue() + Mathf.Max(0f, delta);
+            return SetThrowProgress(nextProgress);
         }
 
         public bool CompleteThrowStep()
@@ -144,6 +170,62 @@ namespace TaskSystem
             }
 
             return difficultyProfiles[0];
+        }
+
+        private int GetHighestConfiguredDifficultyLevel()
+        {
+            if (difficultyProfiles == null || difficultyProfiles.Length == 0)
+            {
+                difficultyProfiles = CreateDefaultDifficultyProfiles();
+            }
+
+            int highestLevel = 1;
+            for (int i = 0; i < difficultyProfiles.Length; i++)
+            {
+                DifficultyProfile profile = difficultyProfiles[i];
+                if (profile != null)
+                {
+                    highestLevel = Mathf.Max(highestLevel, profile.level);
+                }
+            }
+
+            return highestLevel;
+        }
+
+        public bool SetThrowProgress(float value)
+        {
+            return !string.IsNullOrWhiteSpace(throwStepId) &&
+                   SimTask != null &&
+                   SimManager != null &&
+                   SimManager.IsRunning &&
+                   SimTask.SetObjectiveProgress(throwStepId, Mathf.Max(0f, value), SimManager.CurrentClock);
+        }
+
+        public float GetThrowProgressValue()
+        {
+            if (SimTask == null || string.IsNullOrWhiteSpace(throwStepId))
+            {
+                return 0f;
+            }
+
+            SimTaskObjective throwObjective = SimTask.GetObjective(throwStepId);
+            return throwObjective != null ? throwObjective.CurrentValue : 0f;
+        }
+
+        private void EnsureTaskTracker()
+        {
+            if (GetComponent<SeedsTaskTracker>() == null)
+            {
+                gameObject.AddComponent<SeedsTaskTracker>();
+            }
+        }
+
+        private void EnsureAdaptiveReporter()
+        {
+            if (GetComponent<SeedsTaskAdaptiveReporter>() == null)
+            {
+                gameObject.AddComponent<SeedsTaskAdaptiveReporter>();
+            }
         }
 
         private static DifficultyProfile[] CreateDefaultDifficultyProfiles()

@@ -12249,25 +12249,25 @@ MonoBehaviour:
   difficultyProfiles:
   - level: 1
     timeLimitSeconds: 10
-    requiredWaterHitsPerPlant: 1
+    requiredWateringSecondsPerPlant: 3
     waterTriggerRadius: 0.2
     waterTriggerLength: 1
-    plantHitboxScale: 1
+    plantHitboxScale: 2
     tiltThreshold: 35
     spillDuration: 1.1
     returnZoneRadius: 0.35
   - level: 2
     timeLimitSeconds: 10
-    requiredWaterHitsPerPlant: 1
+    requiredWateringSecondsPerPlant: 3
     waterTriggerRadius: 0.2
     waterTriggerLength: 1
-    plantHitboxScale: 1
+    plantHitboxScale: 1.3333334
     tiltThreshold: 35
     spillDuration: 1.1
     returnZoneRadius: 0.35
   - level: 3
     timeLimitSeconds: 10
-    requiredWaterHitsPerPlant: 1
+    requiredWateringSecondsPerPlant: 3
     waterTriggerRadius: 0.2
     waterTriggerLength: 1
     plantHitboxScale: 1
@@ -22016,8 +22016,8 @@ MonoBehaviour:
   waterTrigger: {fileID: 0}
   autoCreateParticles: 1
   boostParticleVisibility: 1
-  localEmissionDirection: {x: 0, y: 0, z: 1}
-  spawnForwardOffset: 0
+  localEmissionDirection: {x: 0, y: -0.2, z: 1}
+  spawnForwardOffset: 0.02
   triggerForwardOffset: 0.35
   triggerLength: 0.35
   triggerRadius: 0.04

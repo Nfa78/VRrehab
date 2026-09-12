@@ -46,7 +46,7 @@ namespace TaskSystem
                 return;
             }
 
-            bool updated = taskDriver.RakeLeaves(progressDelta);
+            bool updated = taskDriver.RakeLeaves(this, progressDelta);
             if (!updated)
             {
                 return;

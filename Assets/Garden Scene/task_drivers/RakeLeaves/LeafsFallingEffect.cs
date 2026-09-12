@@ -46,7 +46,18 @@ public class LeafsFallingEffect : MonoBehaviour
     private Renderer[] cachedRenderers;
     private Collider[] cachedColliders;
 
+    public event System.Action<LeafsFallingEffect> FellPastResetThreshold;
+    public static event System.Action<LeafsFallingEffect, GameObject> PhysicsCopySpawned;
+
     public bool IsSimulationActive => simulationActive;
+    public bool CanResetAfterFall
+    {
+        get
+        {
+            EnsureInitialized();
+            return initialPosition.y > resetYThreshold;
+        }
+    }
 
     public void ApplyCatchDifficulty(float newFallSpeed, float newSwayAmount, float newDepthAmount)
     {
@@ -168,7 +179,15 @@ public class LeafsFallingEffect : MonoBehaviour
 
         if (currentPosition.y < resetYThreshold)
         {
+            FellPastResetThreshold?.Invoke(this);
             SpawnPhysicsCopyBeforeReset();
+
+            if (!CanResetAfterFall)
+            {
+                SetSimulationActive(false, true);
+                return;
+            }
+
             ResetToStartPose();
         }
     }
@@ -209,6 +228,7 @@ public class LeafsFallingEffect : MonoBehaviour
         ConfigureBoxCollider(copy.transform, boxCollider);
         ConfigureRakeProgressReporter(copy);
         ConfigureHoeImpulse(copy);
+        PhysicsCopySpawned?.Invoke(this, copy);
 
         if (spawnedLeafLifetimeSeconds > 0f)
         {

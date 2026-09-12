@@ -504,6 +504,11 @@ namespace TaskSystem
             timeLimitSeconds = Mathf.Max(0f, seconds);
         }
 
+        public void SetFailOnTimeout(bool value)
+        {
+            failOnTimeout = value;
+        }
+
         public bool SetObjectiveMaxValue(string objectiveId, float maxValue)
         {
             SimTaskObjective objective = GetObjective(objectiveId);

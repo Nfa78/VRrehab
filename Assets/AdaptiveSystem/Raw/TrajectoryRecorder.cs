@@ -12,6 +12,18 @@ namespace AdaptiveSystem.Raw
 
         public TrajectoryBuffer Buffer => _buffer;
 
+        public Transform Target
+        {
+            get { return target; }
+            set { target = value; }
+        }
+
+        public float SampleIntervalSeconds
+        {
+            get { return sampleIntervalSeconds; }
+            set { sampleIntervalSeconds = Mathf.Max(0.001f, value); }
+        }
+
         public void Begin()
         {
             _buffer.Start();
