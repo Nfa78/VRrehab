@@ -102,6 +102,15 @@ namespace TaskSystem
             return report != null;
         }
 
+        /// <summary>Returns a snapshot when this tracker already observed the current task run.</summary>
+        public bool TryGetCurrentTaskReport(out TaskRunReport report)
+        {
+            report = taskRunActive && HasMeaningfulReport(currentTaskReport)
+                ? CloneTaskRunReport(currentTaskReport)
+                : null;
+            return report != null;
+        }
+
         private void HandleTaskStarted(SimTask task)
         {
             if (IsOwnedTask(task))
@@ -123,6 +132,14 @@ namespace TaskSystem
             if (IsOwnedTask(task) && taskRunActive)
             {
                 EndTaskRun(task, "failed", failureReason, true);
+            }
+        }
+
+        private void HandleTaskAbandoned(SimTask task, string reason)
+        {
+            if (IsOwnedTask(task) && taskRunActive)
+            {
+                EndTaskRun(task, "abandoned", reason, false);
             }
         }
 
@@ -602,6 +619,7 @@ namespace TaskSystem
             simManager.LogicalTaskStarted += HandleTaskStarted;
             simManager.LogicalTaskEnded += HandleTaskEnded;
             simManager.LogicalTaskFailed += HandleTaskFailed;
+            simManager.LogicalTaskAbandoned += HandleTaskAbandoned;
             simManager.LogicalTaskStepChanged += HandleTaskStepChanged;
             simManager.LogicalTaskObjectiveProgressChanged += HandleTaskObjectiveProgressChanged;
             simManager.LogicalTaskObjectiveCompleted += HandleTaskObjectiveCompleted;
@@ -618,6 +636,7 @@ namespace TaskSystem
             simManager.LogicalTaskStarted -= HandleTaskStarted;
             simManager.LogicalTaskEnded -= HandleTaskEnded;
             simManager.LogicalTaskFailed -= HandleTaskFailed;
+            simManager.LogicalTaskAbandoned -= HandleTaskAbandoned;
             simManager.LogicalTaskStepChanged -= HandleTaskStepChanged;
             simManager.LogicalTaskObjectiveProgressChanged -= HandleTaskObjectiveProgressChanged;
             simManager.LogicalTaskObjectiveCompleted -= HandleTaskObjectiveCompleted;

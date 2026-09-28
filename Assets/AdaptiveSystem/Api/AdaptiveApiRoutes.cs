@@ -64,6 +64,11 @@
             return ApiRoute.From(AdaptiveApiSegments.TaskExecutions, taskExecutionId, AdaptiveApiSegments.Metrics);
         }
 
+        public static ApiRoute TaskProgress(string taskExecutionId)
+        {
+            return ApiRoute.From(AdaptiveApiSegments.TaskExecutions, taskExecutionId, AdaptiveApiSegments.Progress);
+        }
+
         public static ApiRoute TaskExecutionEnd(string taskExecutionId)
         {
             return ApiRoute.From(AdaptiveApiSegments.TaskExecutions, taskExecutionId, AdaptiveApiSegments.End);

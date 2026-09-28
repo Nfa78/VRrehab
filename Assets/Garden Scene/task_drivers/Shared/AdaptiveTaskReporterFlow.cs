@@ -17,8 +17,11 @@ namespace TaskSystem
         public int difficultyLevel = 1;
         public string startedAtUtc = string.Empty;
         public string taskExecutionId = string.Empty;
+        public int nextProgressSequenceNumber = 1;
         public bool startPending;
         public bool startSucceeded;
+        public bool finalizationStarted;
+        public bool progressUploadInFlight;
         public string startError = string.Empty;
     }
 
@@ -32,10 +35,14 @@ namespace TaskSystem
             public bool ApplyBackendTimeout;
             public bool AutoApplyAdaptiveDecisionToNextRun;
             public float TaskExecutionStartWaitSeconds = 5f;
+            public float ProgressSnapshotIntervalSeconds = 3f;
             public string TaskId = string.Empty;
             public int CurrentDifficultyLevel = 1;
             public string TaskEndTimeUtc = string.Empty;
+            public string TaskOutcome = "completed";
+            public string TaskFailureReason = string.Empty;
             public Func<TaskMetricsRequest> BuildMetricsRequest;
+            public Func<TaskProgressRequest> BuildProgressRequest;
             public Func<string> GetActiveSessionId;
             public Action<string> SetActiveSessionId;
             public Func<string> GetActiveTaskExecutionId;
@@ -72,14 +79,19 @@ namespace TaskSystem
             attempt.startPending = true;
             attempt.startSucceeded = false;
             attempt.taskExecutionId = string.Empty;
+            attempt.nextProgressSequenceNumber = 1;
+            attempt.finalizationStarted = false;
+            bindings.LogInfo?.Invoke($"Task reporting begin: taskId={attempt.taskId}, attempt={attempt.attemptIndex}, difficulty={attempt.difficultyLevel}.");
 
             if (bindings.AdaptiveApi == null)
             {
+                bindings.LogWarning?.Invoke("Task reporting stopped before API call: AdaptiveApiClient reference is missing.");
                 CompleteAttemptStart(bindings, attempt, false, "AdaptiveApiClient reference is missing.");
                 yield break;
             }
 
             bindings.AdaptiveApi.RestoreRuntimeAuthSessionIfNeeded();
+            bindings.LogInfo?.Invoke($"Task reporting API resolved: object={bindings.AdaptiveApi.name}, authenticated={bindings.AdaptiveApi.HasAccessToken}.");
             if (!bindings.AdaptiveApi.HasAccessToken)
             {
                 CompleteAttemptStart(bindings, attempt, false, "No authenticated adaptive API session is available.");
@@ -92,6 +104,7 @@ namespace TaskSystem
                 string dominantHand = bindings.ResolveDominantHand != null ? bindings.ResolveDominantHand() : "right";
                 string notes = bindings.ResolvePatientNotes != null ? bindings.ResolvePatientNotes() : string.Empty;
                 AdaptiveRuntimeContext.SetPatientProfile(patientCode, dominantHand, notes);
+                bindings.LogInfo?.Invoke($"Ensuring patient profile: patientCode={patientCode}, dominantHand={dominantHand}.");
 
                 ApiResult<PatientProfile> patientResult = null;
                 yield return bindings.AdaptiveApi.PutMyPatientAsync(
@@ -105,6 +118,7 @@ namespace TaskSystem
                     CompleteAttemptStart(bindings, attempt, false, DescribeError(patientResult, "Failed to create adaptive patient profile."));
                     yield break;
                 }
+                bindings.LogInfo?.Invoke("Patient profile request succeeded.");
             }
 
             string activeSessionId = bindings.GetActiveSessionId != null ? bindings.GetActiveSessionId() : string.Empty;
@@ -118,6 +132,7 @@ namespace TaskSystem
 
                 if (string.IsNullOrWhiteSpace(activeSessionId))
                 {
+                    bindings.LogInfo?.Invoke("No active session found; starting a new adaptive session.");
                     ApiResult<SessionStartResponse> sessionResult = null;
                     yield return bindings.AdaptiveApi.StartSessionAsync(
                         bindings.ResolveDevice != null ? bindings.ResolveDevice() : ResolveDevice(string.Empty),
@@ -139,6 +154,10 @@ namespace TaskSystem
                     AdaptiveRuntimeContext.SetActiveSessionId(activeSessionId);
                     bindings.LogInfo?.Invoke($"Started adaptive rehab session {activeSessionId}.");
                 }
+                else
+                {
+                    bindings.LogInfo?.Invoke($"Using existing adaptive session {activeSessionId}.");
+                }
             }
             else
             {
@@ -153,6 +172,7 @@ namespace TaskSystem
             }
 
             bindings.BeforeTaskExecutionStart?.Invoke();
+            bindings.LogInfo?.Invoke($"Starting task execution: sessionId={activeSessionId}, taskId={attempt.taskId}, difficulty={attempt.difficultyLevel}.");
 
             ApiResult<TaskStartResponse> taskStartResult = null;
             yield return bindings.AdaptiveApi.StartTaskExecutionAsync(
@@ -167,12 +187,20 @@ namespace TaskSystem
                 taskStartResult.data == null ||
                 string.IsNullOrWhiteSpace(taskStartResult.data.task_execution_id))
             {
+                bindings.LogWarning?.Invoke($"Task execution request failed: {DescribeError(taskStartResult, "no response or task_execution_id")}");
                 bindings.TaskExecutionStartFailed?.Invoke();
                 CompleteAttemptStart(bindings, attempt, false, DescribeError(taskStartResult, "Failed to start adaptive task execution."));
                 yield break;
             }
 
             attempt.taskExecutionId = taskStartResult.data.task_execution_id;
+            if (!string.IsNullOrWhiteSpace(taskStartResult.data.status) &&
+                !string.Equals(taskStartResult.data.status, "running", StringComparison.OrdinalIgnoreCase))
+            {
+                CompleteAttemptStart(bindings, attempt, false, $"Task execution started with unexpected status '{taskStartResult.data.status}'.");
+                yield break;
+            }
+            bindings.LogInfo?.Invoke($"Task execution created: taskExecutionId={attempt.taskExecutionId}, timeout={taskStartResult.data.timeout_seconds}s, expected={taskStartResult.data.expected_time_seconds}s.");
             bindings.SetActiveTaskExecutionId?.Invoke(attempt.taskExecutionId);
             bindings.SetLastTaskExecutionId?.Invoke(attempt.taskExecutionId);
             bindings.SetLastBackendTimeoutSeconds?.Invoke(taskStartResult.data.timeout_seconds);
@@ -189,6 +217,64 @@ namespace TaskSystem
                 $"at difficulty {attempt.difficultyLevel}.");
         }
 
+        public static IEnumerator SubmitProgressSnapshots(Bindings bindings, AdaptiveTaskAttemptContext attempt)
+        {
+            if (bindings == null || attempt == null || bindings.AdaptiveApi == null)
+            {
+                yield break;
+            }
+
+            float intervalSeconds = Mathf.Max(0.5f, bindings.ProgressSnapshotIntervalSeconds);
+            while (attempt.startSucceeded &&
+                   !attempt.finalizationStarted &&
+                   !string.IsNullOrWhiteSpace(attempt.taskExecutionId))
+            {
+                yield return new WaitForSecondsRealtime(intervalSeconds);
+
+                if (attempt.finalizationStarted || !attempt.startSucceeded)
+                {
+                    yield break;
+                }
+
+                TaskProgressRequest request = bindings.BuildProgressRequest != null
+                    ? bindings.BuildProgressRequest()
+                    : null;
+                if (request == null)
+                {
+                    bindings.LogWarning?.Invoke("Progress snapshot skipped: no active task report is available.");
+                    continue;
+                }
+
+                request.sequence_number = attempt.nextProgressSequenceNumber;
+                request.captured_at = DateTime.UtcNow.ToString("o");
+
+                ApiResult<TaskProgressResponse> progressResult = null;
+                attempt.progressUploadInFlight = true;
+                yield return bindings.AdaptiveApi.SubmitTaskProgressAsync(
+                    attempt.taskExecutionId,
+                    request,
+                    result => progressResult = result);
+                attempt.progressUploadInFlight = false;
+
+                if (progressResult != null && progressResult.IsSuccess)
+                {
+                    attempt.nextProgressSequenceNumber++;
+                    bindings.LogInfo?.Invoke($"Progress snapshot {request.sequence_number} submitted for taskExecutionId={attempt.taskExecutionId}.");
+                    continue;
+                }
+
+                if (progressResult != null && progressResult.status_code == 409)
+                {
+                    bindings.LogWarning?.Invoke("Progress reporting stopped because the task execution is no longer running.");
+                    yield break;
+                }
+
+                bindings.LogWarning?.Invoke(
+                    $"Progress snapshot {request.sequence_number} failed and will be retried: " +
+                    DescribeError(progressResult, "no response"));
+            }
+        }
+
         public static IEnumerator SubmitMetricsForAttempt(Bindings bindings, AdaptiveTaskAttemptContext attempt)
         {
             if (bindings == null)
@@ -196,13 +282,24 @@ namespace TaskSystem
                 yield break;
             }
 
+            if (attempt != null)
+            {
+                attempt.finalizationStarted = true;
+                while (attempt.progressUploadInFlight)
+                {
+                    yield return null;
+                }
+            }
+
             if (bindings.AdaptiveApi == null)
             {
+                bindings.LogWarning?.Invoke("Metrics reporting stopped: AdaptiveApiClient reference is missing.");
                 SetMetricsFailure(bindings, "AdaptiveApiClient reference is missing.");
                 yield break;
             }
 
             bindings.AdaptiveApi.RestoreRuntimeAuthSessionIfNeeded();
+            bindings.LogInfo?.Invoke($"Metrics reporting begin: taskId={bindings.TaskId}, attempt={(attempt != null ? attempt.attemptIndex.ToString() : "unknown")}, authenticated={bindings.AdaptiveApi.HasAccessToken}.");
             if (!bindings.AdaptiveApi.HasAccessToken)
             {
                 SetMetricsFailure(bindings, "No authenticated adaptive API session is available.");
@@ -219,6 +316,7 @@ namespace TaskSystem
 
             if (attempt == null || !attempt.startSucceeded || string.IsNullOrWhiteSpace(attempt.taskExecutionId))
             {
+                bindings.LogWarning?.Invoke($"Metrics reporting skipped: task start did not succeed ({(attempt == null ? "attempt missing" : attempt.startError)}).");
                 SetMetricsFailure(
                     bindings,
                     attempt != null && !string.IsNullOrWhiteSpace(attempt.startError)
@@ -233,6 +331,9 @@ namespace TaskSystem
             TaskMetricsRequest request = bindings.BuildMetricsRequest != null
                 ? bindings.BuildMetricsRequest()
                 : new TaskMetricsRequest();
+            request.is_final = true;
+            request.outcome = string.IsNullOrWhiteSpace(bindings.TaskOutcome) ? "completed" : bindings.TaskOutcome;
+            request.failure_reason = string.IsNullOrWhiteSpace(bindings.TaskFailureReason) ? null : bindings.TaskFailureReason;
             bindings.SetLastMetricsPayloadJson?.Invoke(JsonUtility.ToJson(request, true));
             bindings.SetLastMetricsResponseJson?.Invoke(string.Empty);
             bindings.SetLastDecision?.Invoke(string.Empty);
@@ -246,8 +347,10 @@ namespace TaskSystem
                 request,
                 result => metricsResult = result);
 
-            if (metricsResult != null && metricsResult.IsSuccess && metricsResult.data != null)
+            bool metricsSubmitted = metricsResult != null && metricsResult.IsSuccess && metricsResult.data != null;
+            if (metricsSubmitted)
             {
+                bindings.LogInfo?.Invoke($"Metrics request succeeded for taskExecutionId={attempt.taskExecutionId}.");
                 string decision = metricsResult.data.decision ?? string.Empty;
                 bindings.SetLastMetricsSubmitSucceeded?.Invoke(true);
                 bindings.SetLastDecision?.Invoke(decision);
@@ -266,7 +369,13 @@ namespace TaskSystem
             }
             else
             {
+                bindings.LogWarning?.Invoke($"Metrics request failed for taskExecutionId={attempt.taskExecutionId}: {DescribeError(metricsResult, "no response")}");
                 SetMetricsFailure(bindings, DescribeError(metricsResult, "Failed to submit adaptive task metrics."));
+            }
+
+            if (!metricsSubmitted)
+            {
+                yield break;
             }
 
             ApiResult<TaskEndResponse> endResult = null;
@@ -275,11 +384,17 @@ namespace TaskSystem
                 !string.IsNullOrWhiteSpace(bindings.TaskEndTimeUtc)
                     ? bindings.TaskEndTimeUtc
                     : DateTime.UtcNow.ToString("o"),
+                request.outcome,
+                request.failure_reason,
                 result => endResult = result);
 
             if (endResult == null || !endResult.IsSuccess)
             {
                 bindings.LogWarning?.Invoke(DescribeError(endResult, "Failed to end adaptive task execution."));
+            }
+            else
+            {
+                bindings.LogInfo?.Invoke($"Task execution ended: taskExecutionId={attempt.taskExecutionId}.");
             }
 
             string activeTaskExecutionId = bindings.GetActiveTaskExecutionId != null
@@ -368,6 +483,17 @@ namespace TaskSystem
         public static bool IsFailed(string outcome)
         {
             return string.Equals(outcome, "failed", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static TaskDetails BuildTaskDetails(SimManager simManager)
+        {
+            SimTaskObjective objective = simManager != null ? simManager.CurrentObjective : null;
+            return new TaskDetails
+            {
+                current_objective_id = objective != null ? objective.ObjectiveId : string.Empty,
+                current_objective_progress = objective != null ? objective.CurrentValue : 0f,
+                current_objective_target = objective != null ? objective.MaxValue : 0f
+            };
         }
 
         public static void AddSceneMetric(ICollection<SceneMetric> metrics, string name, float value, string unit)

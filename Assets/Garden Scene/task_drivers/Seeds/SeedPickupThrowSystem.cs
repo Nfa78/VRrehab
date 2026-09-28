@@ -143,12 +143,14 @@ public class SeedPickupThrowSystem : MonoBehaviour
 
         SampleHand(hand);
         Vector3 releaseVelocity = ResolveBufferedReleaseVelocity(hand);
+        Vector3 releaseAngularVelocity = ResolveBufferedReleaseAngularVelocity();
 
-        int spawned = throwSpawner.SpawnBurst(hand, releaseVelocity);
+        int spawned = throwSpawner.SpawnBurst(hand, releaseVelocity, releaseAngularVelocity);
         if (logDebug)
         {
             Debug.Log(
-                $"[SeedPickupThrowSystem] Released seeds from {hand.name}. Spawned={spawned}. BufferedSpeed={releaseVelocity.magnitude:0.###}.",
+                $"[SeedPickupThrowSystem] Released seeds from {hand.name}. Spawned={spawned}. " +
+                $"BufferedSpeed={releaseVelocity.magnitude:0.###}, BufferedSpin={releaseAngularVelocity.magnitude:0.###} rad/s.",
                 this);
         }
 
@@ -253,8 +255,11 @@ public class SeedPickupThrowSystem : MonoBehaviour
             sampledHand = hand;
         }
 
-        float now = Time.time;
+        // Tracking poses update independently of the simulation clock. Unscaled time keeps
+        // the release estimate stable if the task temporarily changes Time.timeScale.
+        float now = Time.unscaledTime;
         Vector3 position = hand.position;
+        Quaternion rotation = hand.rotation;
 
         if (_releaseSamples.Count > 0)
         {
@@ -267,7 +272,7 @@ public class SeedPickupThrowSystem : MonoBehaviour
             }
         }
 
-        _releaseSamples.Add(new HandMotionSample(position, now));
+        _releaseSamples.Add(new HandMotionSample(position, rotation, now));
         TrimReleaseSamples(now);
     }
 
@@ -313,6 +318,47 @@ public class SeedPickupThrowSystem : MonoBehaviour
         return (newestSample.Position - oldestSample.Position) / totalTime;
     }
 
+    private Vector3 ResolveBufferedReleaseAngularVelocity()
+    {
+        if (_releaseSamples.Count < 2)
+        {
+            return Vector3.zero;
+        }
+
+        Vector3 weightedAngularVelocity = Vector3.zero;
+        float totalWeight = 0f;
+
+        for (int i = 1; i < _releaseSamples.Count; i++)
+        {
+            HandMotionSample previousSample = _releaseSamples[i - 1];
+            HandMotionSample currentSample = _releaseSamples[i];
+            float deltaTime = currentSample.Time - previousSample.Time;
+            if (deltaTime <= 0.0001f)
+            {
+                continue;
+            }
+
+            Quaternion deltaRotation = currentSample.Rotation * Quaternion.Inverse(previousSample.Rotation);
+            deltaRotation.ToAngleAxis(out float angleDegrees, out Vector3 axis);
+            if (angleDegrees > 180f)
+            {
+                angleDegrees -= 360f;
+            }
+
+            if (axis.sqrMagnitude <= 0.000001f)
+            {
+                continue;
+            }
+
+            float recencyWeight = (float)i / (_releaseSamples.Count - 1);
+            Vector3 segmentAngularVelocity = axis.normalized * (angleDegrees * Mathf.Deg2Rad / deltaTime);
+            weightedAngularVelocity += segmentAngularVelocity * recencyWeight;
+            totalWeight += recencyWeight;
+        }
+
+        return totalWeight > 0.0001f ? weightedAngularVelocity / totalWeight : Vector3.zero;
+    }
+
     private void TrimReleaseSamples(float now)
     {
         int sampleLimit = Mathf.Max(2, releaseVelocitySampleCount);
@@ -336,13 +382,15 @@ public class SeedPickupThrowSystem : MonoBehaviour
 
     private readonly struct HandMotionSample
     {
-        public HandMotionSample(Vector3 position, float time)
+        public HandMotionSample(Vector3 position, Quaternion rotation, float time)
         {
             Position = position;
+            Rotation = rotation;
             Time = time;
         }
 
         public Vector3 Position { get; }
+        public Quaternion Rotation { get; }
         public float Time { get; }
     }
 }

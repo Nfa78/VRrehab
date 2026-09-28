@@ -28,6 +28,11 @@ namespace TaskSystem
             {
                 simManager = GetComponent<SimManager>();
             }
+
+            if (adaptiveApi == null)
+            {
+                adaptiveApi = AdaptiveApiClient.Instance;
+            }
         }
 
         private void Reset()
@@ -82,6 +87,16 @@ namespace TaskSystem
         {
             ApplyDifficultyLevelToCurrentDriver();
 
+            if (adaptiveApi == null)
+            {
+                adaptiveApi = AdaptiveApiClient.Instance;
+            }
+
+            if (string.IsNullOrWhiteSpace(sessionId))
+            {
+                sessionId = AdaptiveRuntimeContext.ActiveSessionId;
+            }
+
             if (!startAdaptiveExecutionOnTaskStart)
             {
                 return;
@@ -120,19 +135,24 @@ namespace TaskSystem
 
         private void HandleTaskEnded(SimTask task)
         {
-            EndAdaptiveExecution(task != null ? task.EndedAtUtc : string.Empty);
+            EndAdaptiveExecution(task != null ? task.EndedAtUtc : string.Empty, "completed", null);
         }
 
         private void HandleTaskFailed(SimTask task, string failureReason)
         {
-            EndAdaptiveExecution(task != null ? task.EndedAtUtc : string.Empty);
+            EndAdaptiveExecution(task != null ? task.EndedAtUtc : string.Empty, "failed", failureReason);
         }
 
-        private void EndAdaptiveExecution(string endTimeUtc)
+        private void EndAdaptiveExecution(string endTimeUtc, string outcome, string failureReason)
         {
             if (!endAdaptiveExecutionOnTaskEnd)
             {
                 return;
+            }
+
+            if (adaptiveApi == null)
+            {
+                adaptiveApi = AdaptiveApiClient.Instance;
             }
 
             if (adaptiveApi == null || string.IsNullOrWhiteSpace(_taskExecutionId))
@@ -143,6 +163,8 @@ namespace TaskSystem
             StartCoroutine(adaptiveApi.EndTaskExecutionAsync(
                 _taskExecutionId,
                 endTimeUtc,
+                outcome,
+                failureReason,
                 OnAdaptiveTaskEnded));
         }
 

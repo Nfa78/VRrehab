@@ -94,7 +94,14 @@ public class MenuSceneAutoSetupWindow : EditorWindow
             mainMenuPanel.gameObject.SetActive(false);
 
             var eventSystem = EnsureEventSystem(preferOvrOverlayCanvas, canvasRoot);
-            var apiClient = FindObjectOfType<AdaptiveApiClient>(true);
+            // Prefer the client owned by MenuRoot/Systems. The scene contains
+            // an older inactive root-level client, and selecting it here would
+            // wire authentication to a component that never receives input.
+            var apiClient = systemsRoot.GetComponentInChildren<AdaptiveApiClient>(true);
+            if (apiClient == null)
+            {
+                apiClient = FindObjectOfType<AdaptiveApiClient>();
+            }
             if (apiClient == null && createAdaptiveApiClientIfMissing)
             {
                 apiClient = GetOrAddComponent<AdaptiveApiClient>(GetOrCreateChild(systemsRoot.transform, "AdaptiveApiClient").gameObject);
@@ -444,6 +451,8 @@ public class MenuSceneAutoSetupWindow : EditorWindow
     {
         var panel = GetOrCreateUiChild(parent, "FeedbackPanel");
         var rectTransform = panel.GetComponent<RectTransform>();
+        rectTransform.localPosition = Vector3.zero;
+        rectTransform.localScale = Vector3.one;
         rectTransform.anchorMin = new Vector2(0.5f, 0f);
         rectTransform.anchorMax = new Vector2(0.5f, 0f);
         rectTransform.pivot = new Vector2(0.5f, 0f);
@@ -456,6 +465,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
 
         var label = CreateLabel(panel.transform, "MessageLabel", string.Empty);
         var labelRect = label.GetComponent<RectTransform>();
+        labelRect.localScale = Vector3.one;
         Stretch(labelRect, new Vector2(20f, 10f), new Vector2(-20f, -10f));
         label.alignment = TextAlignmentOptions.Center;
 
@@ -469,7 +479,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         var template = GetOrCreateUiChild(cardContainer, "SceneCardTemplate");
         template.gameObject.SetActive(false);
         var layoutElement = GetOrAddComponent<LayoutElement>(template.gameObject);
-        layoutElement.preferredWidth = 220f;
+        layoutElement.preferredWidth = 280f;
         layoutElement.preferredHeight = 180f;
         EnsureVerticalLayout(template.gameObject);
 
@@ -678,25 +688,25 @@ public class MenuSceneAutoSetupWindow : EditorWindow
     private static void EnsureVerticalLayout(GameObject gameObject)
     {
         var layout = GetOrAddComponent<VerticalLayoutGroup>(gameObject);
-        layout.spacing = 12f;
+        layout.spacing = 18f;
         layout.childAlignment = TextAnchor.UpperCenter;
         layout.childControlWidth = true;
-        layout.childControlHeight = false;
-        layout.childForceExpandWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
 
         var fitter = GetOrAddComponent<ContentSizeFitter>(gameObject);
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
     }
 
     private static void EnsureHorizontalLayout(GameObject gameObject)
     {
         var layout = GetOrAddComponent<HorizontalLayoutGroup>(gameObject);
-        layout.spacing = 12f;
+        layout.spacing = 18f;
         layout.childAlignment = TextAnchor.MiddleCenter;
         layout.childControlWidth = false;
-        layout.childControlHeight = false;
+        layout.childControlHeight = true;
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
 
@@ -714,8 +724,8 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         button.targetGraphic = image;
 
         var layoutElement = GetOrAddComponent<LayoutElement>(buttonObject);
-        layoutElement.preferredWidth = 220f;
-        layoutElement.preferredHeight = 56f;
+        layoutElement.preferredWidth = 320f;
+        layoutElement.preferredHeight = 64f;
 
         var label = GetOrCreateUiChild(buttonObject.transform, "Label");
         var text = GetOrAddComponent<TextMeshProUGUI>(label);
@@ -738,8 +748,8 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         text.raycastTarget = false;
 
         var layoutElement = GetOrAddComponent<LayoutElement>(labelObject);
-        layoutElement.preferredWidth = 600f;
-        layoutElement.preferredHeight = 44f;
+        layoutElement.preferredWidth = 700f;
+        layoutElement.preferredHeight = 52f;
         return text;
     }
 
@@ -763,8 +773,8 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         image.color = Color.white;
 
         var layoutElement = GetOrAddComponent<LayoutElement>(inputObject);
-        layoutElement.preferredWidth = 500f;
-        layoutElement.preferredHeight = 56f;
+        layoutElement.preferredWidth = 640f;
+        layoutElement.preferredHeight = 64f;
 
         var inputField = GetOrAddComponent<TMP_InputField>(inputObject);
 
@@ -775,7 +785,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         var text = GetOrAddComponent<TextMeshProUGUI>(textObject);
         text.fontSize = 24f;
         text.color = Color.black;
-        text.alignment = TextAlignmentOptions.Left;
+        text.alignment = TextAlignmentOptions.Center;
         text.raycastTarget = false;
         Stretch(textObject.GetComponent<RectTransform>());
 
@@ -784,7 +794,7 @@ public class MenuSceneAutoSetupWindow : EditorWindow
         placeholder.text = placeholderText;
         placeholder.fontSize = 24f;
         placeholder.color = new Color(0f, 0f, 0f, 0.45f);
-        placeholder.alignment = TextAlignmentOptions.Left;
+        placeholder.alignment = TextAlignmentOptions.Center;
         placeholder.raycastTarget = false;
         Stretch(placeholderObject.GetComponent<RectTransform>());
 
@@ -800,8 +810,8 @@ public class MenuSceneAutoSetupWindow : EditorWindow
     {
         var sliderObject = GetOrCreateUiChild(parent, name);
         var layoutElement = GetOrAddComponent<LayoutElement>(sliderObject);
-        layoutElement.preferredWidth = 420f;
-        layoutElement.preferredHeight = 32f;
+        layoutElement.preferredWidth = 520f;
+        layoutElement.preferredHeight = 36f;
 
         var slider = GetOrAddComponent<Slider>(sliderObject);
         slider.minValue = 0f;

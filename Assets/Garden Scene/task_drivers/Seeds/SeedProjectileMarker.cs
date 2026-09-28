@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Marker component used by seed gates to recognize thrown seeds.
+/// Marker component used by seed targets to recognize thrown seeds.
 /// </summary>
 [DisallowMultipleComponent]
 public class SeedProjectileMarker : MonoBehaviour
@@ -10,6 +10,7 @@ public class SeedProjectileMarker : MonoBehaviour
     private static readonly List<SeedProjectileMarker> activeMarkers = new List<SeedProjectileMarker>();
 
     [SerializeField] private int throwId = -1;
+    private bool claimedForSoilRegion;
 
     public static IReadOnlyList<SeedProjectileMarker> ActiveMarkers => activeMarkers;
     public int ThrowId => throwId;
@@ -31,6 +32,21 @@ public class SeedProjectileMarker : MonoBehaviour
     public void SetThrowId(int value)
     {
         throwId = value;
+        claimedForSoilRegion = false;
+    }
+
+    /// <summary>
+    /// Claims this seed for a single soil region so a bounced seed cannot score twice.
+    /// </summary>
+    public bool TryClaimForSoilRegion()
+    {
+        if (claimedForSoilRegion)
+        {
+            return false;
+        }
+
+        claimedForSoilRegion = true;
+        return true;
     }
 
     private float GetApproximateRadiusWorld()

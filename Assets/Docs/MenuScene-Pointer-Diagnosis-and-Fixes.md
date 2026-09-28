@@ -8,6 +8,14 @@ The user interacts in the **separate Meta XR Simulator window**, not Unity's Gam
 
 The revised SDK and game assemblies compile with zero errors. Scene-reference checks pass. This is not yet a confirmed end-to-end Simulator fix: the revised scene still needs the user's runtime test.
 
+## UI readability and spacing update
+
+The canvas remains at its original uniform scale. Individual controls are now authored as wider horizontal rectangles: buttons are 320×64, input fields are 640×64, and labels use wider layout bounds while keeping their original font assets and font sizes. Vertical layout groups now apply their preferred heights, so controls no longer remain 100×100 squares in the generated scene.
+
+The `EntryPanel`, `LoginPanel`, and `SignupPanel` had negative vertical layout spacing (`-36.06`, `-45.7`, and `-45`), which caused their controls to overlap. Those groups now use positive spacing of 18–20 units. The main menu, details, settings, and scene-card groups use smaller positive gaps so adjacent controls remain visually separated.
+
+MenuRoot TextMeshPro elements are centered horizontally and vertically, including button labels and input-field text/placeholders, so text stays inside the widened control rectangles. The auto-setup generator uses the same centered alignment for newly generated input fields.
+
 ## What the supplied log establishes
 
 - Meta XR Simulator v205.0 is the selected OpenXR runtime.
@@ -166,10 +174,35 @@ The last committed scene had `OVRRaycaster.pointer` assigned to `EventSystem` at
 
 Similarly, `MenuRoot` being disabled in an earlier saved scene was intentional experimentation, not evidence that its normal configuration caused the offset.
 
+## Feedback panel and authenticated API handoff
+
+The saved `FeedbackPanel` had been changed to a 150x30 world-space rectangle, with a local Y scale of 2 on the panel and 0.5 on `MessageLabel`. Its local Z was also -102 relative to `MenuCanvas`, which could place the panel behind the overlay. The panel is now a 900x80 rectangle at the existing top position, with unit scale and local Z 0. `MessageLabel` fills it with 20-unit margins, uses unit scale, 28-point centered TextMeshPro text, and normal overflow. The placeholder scene text was cleared; `MenuFeedbackController` supplies the message at runtime. The controller keeps the informational panel from blocking UI raycasts while it fades. The editor auto-setup path now resets the same transform values so regenerating the menu does not restore the hidden layout.
+
+`AdaptiveApiClient` is now a persistent singleton. The active client under `MenuRoot/Systems` registers as `AdaptiveApiClient.Instance`, calls `DontDestroyOnLoad`, and keeps mirroring the authenticated `AuthSessionResponse` into `AdaptiveRuntimeContext`. A second client created by a Garden scene is removed before it can overwrite the configured client or session.
+
+The Console now identifies this handoff without printing credentials: look for `[AdaptiveApiClient] Registered persistent client`, `[AdaptiveApiClient] Authentication session stored ... tokenPresent=True`, and, if a scene-local copy exists, `[AdaptiveApiClient] Duplicate client ... was removed`.
+
+The Seeds, Water Plants, Rake Leaves, and Catch Leafs adaptive reporters, plus `TaskAdaptiveBridge`, resolve `AdaptiveApiClient.Instance` before searching only the current scene. Consequently, the client that received the menu login token remains the one used for patient-profile, session, adaptive-task, and metrics requests after loading Garden. `AdaptiveRuntimeContext` already survives scene loads as a static context and retains the token, authenticated user, patient profile, active session ID, and task difficulty state. Sign-out still clears both the client token and that context.
+
 ## Validation limits
 
 - `Oculus.VR.csproj`: build passed with zero errors.
 - `Assembly-CSharp.csproj`, including the new source through a temporary compile target: build passed with zero errors and existing warnings.
+- The latest `Oculus.VR.csproj` verification also passed with zero warnings and zero errors. A repeat of the full Assembly-CSharp build was unavailable in this shell because Unity's generated `Temp/bin/Debug` dependency DLLs are not present; Unity regenerates those when it imports the project.
 - Static scene checks confirmed source attachment, right-hand selection, disabled desktop mouse override, active MenuRoot, and consistent file IDs.
 - These checks use Unity's cached dependency assemblies. They do not execute the Simulator or verify end-to-end button behavior.
 - Final acceptance remains the Simulator test above, using the newly added press/release diagnostics if it fails.
+
+## Garden task records: why a session could exist without tasks
+
+The Garden task drivers add their components at runtime. Their original order was:
+
+1. add the task tracker;
+2. the tracker enables and synchronizes itself with the already-running `SimManager`;
+3. add the adaptive reporter.
+
+`TaskRunStarted` is an event, so a reporter added after step 2 could miss it permanently. The reporter then never called `POST /task-executions`, while its own flow (or another reporter) could still create `POST /sessions/start`. The backend therefore showed a session with no task execution or metrics rows.
+
+Each tracker now exposes a snapshot of its active run, and each reporter checks that snapshot immediately after subscribing. This closes the lifecycle race and guards against duplicate starts. The shared flow also logs every stage: API/auth resolution, patient profile, session reuse/start, task execution start, metrics submit, and task end. Logs use the task-specific reporter prefix, for example `[WateringTaskAdaptiveReporter]`, and never print the access token.
+
+For the next simulation, filter the Console for `Task reporting`, `Recovered active task run`, `Starting task execution`, and `Task execution created`. If the task-start request fails, the log now includes the backend or transport error; that distinguishes a server task-id/configuration problem from a Unity event-lifecycle problem.

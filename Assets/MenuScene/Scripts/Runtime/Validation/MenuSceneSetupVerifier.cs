@@ -178,7 +178,11 @@ namespace VRStrokeRehab.MenuScene
                 feedbackController = GetComponentInChildren<MenuFeedbackController>(true);
             }
 
-            if (adaptiveApiClient == null)
+            if (AdaptiveApiClient.Instance != null)
+            {
+                adaptiveApiClient = AdaptiveApiClient.Instance;
+            }
+            else if (adaptiveApiClient == null)
             {
                 adaptiveApiClient = GetComponentInChildren<AdaptiveApiClient>(true);
             }

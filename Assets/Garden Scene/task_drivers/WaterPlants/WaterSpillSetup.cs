@@ -4,6 +4,7 @@ public class WaterSpillSetup : MonoBehaviour
 {
     [SerializeField] private Transform waterExitPoint;
     [SerializeField] private ParticleSystem waterParticles;
+    [SerializeField] private Material waterMaterial;
     [SerializeField] private WaterSpillTrigger waterTrigger;
     [SerializeField] private bool autoCreateParticles = true;
     [SerializeField] private bool boostParticleVisibility = true;
@@ -12,7 +13,7 @@ public class WaterSpillSetup : MonoBehaviour
     [SerializeField] private float triggerForwardOffset = 0.35f;
     [SerializeField] private float triggerLength = 1f;
     [SerializeField] private float triggerRadius = 0.2f;
-    [SerializeField] private bool logSetup = true;
+    [SerializeField] private bool logSetup;
 
     public ParticleSystem WaterParticles => waterParticles;
     public WaterSpillTrigger WaterTrigger => waterTrigger;
@@ -201,6 +202,12 @@ public class WaterSpillSetup : MonoBehaviour
         renderer.enabled = true;
         renderer.renderMode = ParticleSystemRenderMode.Billboard;
         renderer.sortMode = ParticleSystemSortMode.Distance;
+
+        if (waterMaterial != null)
+        {
+            renderer.sharedMaterial = waterMaterial;
+            return;
+        }
 
         Shader particleShader = Shader.Find("Particles/Standard Unlit");
         if (particleShader == null)

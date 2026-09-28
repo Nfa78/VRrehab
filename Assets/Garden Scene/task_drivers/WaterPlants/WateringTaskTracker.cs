@@ -78,6 +78,15 @@ namespace TaskSystem
             return report != null;
         }
 
+        /// <summary>Returns a snapshot when this tracker already observed the current task run.</summary>
+        public bool TryGetCurrentTaskReport(out TaskRunReport report)
+        {
+            report = taskRunActive && HasMeaningfulReport(currentTaskReport)
+                ? CloneTaskRunReport(currentTaskReport)
+                : null;
+            return report != null;
+        }
+
         private void Update()
         {
             if (autoResolveReferences && NeedsReferenceResolution())
@@ -143,6 +152,14 @@ namespace TaskSystem
             }
 
             EndTaskRun(task, "failed", failureReason, true);
+        }
+
+        private void HandleTaskAbandoned(SimTask task, string reason)
+        {
+            if (IsOwnedWateringTask(task) && taskRunActive)
+            {
+                EndTaskRun(task, "abandoned", reason, false);
+            }
         }
 
         private void HandleTaskStepChanged(SimTask task, SimTaskObjective objective)
@@ -744,6 +761,7 @@ namespace TaskSystem
             simManager.LogicalTaskStarted += HandleTaskStarted;
             simManager.LogicalTaskEnded += HandleTaskEnded;
             simManager.LogicalTaskFailed += HandleTaskFailed;
+            simManager.LogicalTaskAbandoned += HandleTaskAbandoned;
             simManager.LogicalTaskStepChanged += HandleTaskStepChanged;
             simManager.LogicalTaskObjectiveCompleted += HandleTaskObjectiveCompleted;
             subscribedToSimManager = true;
@@ -759,6 +777,7 @@ namespace TaskSystem
             simManager.LogicalTaskStarted -= HandleTaskStarted;
             simManager.LogicalTaskEnded -= HandleTaskEnded;
             simManager.LogicalTaskFailed -= HandleTaskFailed;
+            simManager.LogicalTaskAbandoned -= HandleTaskAbandoned;
             simManager.LogicalTaskStepChanged -= HandleTaskStepChanged;
             simManager.LogicalTaskObjectiveCompleted -= HandleTaskObjectiveCompleted;
             subscribedToSimManager = false;

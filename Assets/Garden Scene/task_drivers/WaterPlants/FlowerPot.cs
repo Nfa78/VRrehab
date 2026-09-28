@@ -7,7 +7,7 @@ public class FlowerPot : MonoBehaviour
 {
     [SerializeField] private SimObjectiveInteraction simObjectiveInteraction;
     [SerializeField] private WaterPlantsTaskDriver taskDriver;
-    [SerializeField] private bool logWaterHits = true;
+    [SerializeField] private bool logWaterHits;
     [SerializeField] private float particleHitCooldown = 0.25f;
 
     private float nextAllowedHitTime;

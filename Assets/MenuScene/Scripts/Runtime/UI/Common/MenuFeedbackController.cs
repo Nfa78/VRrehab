@@ -129,11 +129,22 @@ namespace VRStrokeRehab.MenuScene
         {
             if (messageLabel == null)
             {
+                Debug.LogWarning("[MenuFeedback] Cannot show feedback because MessageLabel is not assigned.", this);
                 return;
             }
 
+            messageLabel.gameObject.SetActive(true);
+            messageLabel.enabled = true;
+            messageLabel.alignment = TextAlignmentOptions.Center;
+            messageLabel.overflowMode = TextOverflowModes.Overflow;
             messageLabel.text = message;
             messageLabel.color = color;
+            Canvas.ForceUpdateCanvases();
+            Debug.Log(
+                "[MenuFeedback] Showing '" + message + "' on " + messageLabel.name +
+                " rect=" + messageLabel.rectTransform.rect.size +
+                " panel=" + (root != null ? root.name : gameObject.name),
+                this);
             StartShow();
         }
 
@@ -279,8 +290,10 @@ namespace VRStrokeRehab.MenuScene
 
             canvasGroup.alpha = alpha;
             bool isVisible = alpha > 0.001f;
-            canvasGroup.interactable = isVisible;
-            canvasGroup.blocksRaycasts = isVisible;
+            // Feedback is informational and has no close control in the menu.
+            // It must not sit in front of buttons while it fades or is visible.
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
         }
 
         private Button FindChildButton(string childName)

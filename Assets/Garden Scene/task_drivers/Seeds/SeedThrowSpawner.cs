@@ -6,19 +6,33 @@ public class SeedThrowSpawner : MonoBehaviour
     [Header("Spawn")]
     [SerializeField] private GameObject seedCubePrefab;
     [SerializeField] private int spawnCount = 10;
-    [SerializeField] private float seedCubeScale = 0.05f;
-    [SerializeField] private float spawnOffsetForward = 0.08f;
-    [SerializeField] private float forceMin = 1.2f;
-    [SerializeField] private float forceMax = 2.2f;
-    [SerializeField] private float coneHalfAngleDeg = 6f;
-    [SerializeField] private bool useHandForwardDirection = true;
-    [SerializeField][Range(0f, 1f)] private float handVelocityDirectionWeight;
-    [SerializeField][Min(0f)] private float minimumReleaseSpeedForVelocityDirection = 0.15f;
-    [SerializeField] private bool scaleForceByReleaseSpeed = true;
-    [SerializeField][Min(0f)] private float releaseSpeedForMinForce = 0.2f;
-    [SerializeField][Min(0.01f)] private float releaseSpeedForMaxForce = 1.6f;
-    [SerializeField][Min(0f)] private float releaseSpeedForceMultiplierMin = 0.9f;
-    [SerializeField][Min(0f)] private float releaseSpeedForceMultiplierMax = 1.45f;
+    [Tooltip("World-space length of a seed. 12 mm is visible in VR without looking like a thrown pebble.")]
+    [SerializeField][Min(0.002f)] private float seedVisualLengthMeters = 0.012f;
+    [SerializeField] private Vector3 seedVisualAspect = new Vector3(0.65f, 0.45f, 1f);
+    [SerializeField] private bool overridePrefabVisualScale = true;
+    [SerializeField] private Color seedColor = new Color(0.33f, 0.16f, 0.055f, 1f);
+    [SerializeField] private Vector3 releasePointLocalOffset = new Vector3(0f, 0f, 0.08f);
+    [SerializeField][Min(0f)] private float spawnClearanceForward = 0.025f;
+
+    [Header("Physical Launch")]
+    [SerializeField][Min(0f)] private float minimumMeasuredReleaseSpeed = 0.15f;
+    [SerializeField][Min(0f)] private float releaseVelocityMultiplier = 1f;
+    [SerializeField][Min(0f)] private float minimumFallbackLaunchSpeed = 0.35f;
+    [SerializeField][Min(0.01f)] private float maximumLaunchSpeed = 6f;
+    [SerializeField][Range(0f, 45f)] private float coneHalfAngleDeg = 4f;
+    [SerializeField][Min(0f)] private float scatterSpeedMin = 0.02f;
+    [SerializeField][Min(0f)] private float scatterSpeedMax = 0.16f;
+    [SerializeField][Min(0f)] private float maximumAngularSpeed = 35f;
+
+    [Header("Seed Physics")]
+    [Tooltip("Optional shared asset. When assigned, it overrides the fallback Rigidbody and air-drag values below.")]
+    [SerializeField] private SeedPhysicsSettings physicsSettings;
+    [SerializeField][Min(0.0001f)] private float fallbackMassKg = 0.003f;
+    [SerializeField][Min(0f)] private float fallbackLinearDamping = 0.12f;
+    [SerializeField][Min(0f)] private float fallbackAngularDamping = 1.75f;
+    [SerializeField] private bool fallbackEnableAerodynamicDrag = true;
+    [SerializeField][Min(0f)] private float fallbackDragCoefficient = 0.8f;
+    [SerializeField][Min(0.000001f)] private float fallbackReferenceAreaSquareMeters = 0.0015f;
     [SerializeField] private float spawnLifetimeSeconds = 8f;
     [SerializeField] private bool destroySeedsAfterLifetime = true;
 
@@ -35,12 +49,21 @@ public class SeedThrowSpawner : MonoBehaviour
         float newConeHalfAngleDeg)
     {
         spawnCount = Mathf.Max(1, newSpawnCount);
-        forceMin = Mathf.Max(0f, Mathf.Min(newForceMin, newForceMax));
-        forceMax = Mathf.Max(forceMin, Mathf.Max(newForceMin, newForceMax));
         coneHalfAngleDeg = Mathf.Clamp(newConeHalfAngleDeg, 0f, 89f);
+
+        // These two arguments are deliberately retained for compatibility with the
+        // existing difficulty profile. Launch speed now comes from measured hand
+        // motion, so difficulty must not silently replace it with an impulse range.
+        _ = newForceMin;
+        _ = newForceMax;
     }
 
     public int SpawnBurst(Transform hand, Vector3 releaseVelocity)
+    {
+        return SpawnBurst(hand, releaseVelocity, Vector3.zero);
+    }
+
+    public int SpawnBurst(Transform hand, Vector3 releaseVelocity, Vector3 releaseAngularVelocity)
     {
         if (hand == null)
         {
@@ -48,9 +71,9 @@ public class SeedThrowSpawner : MonoBehaviour
         }
 
         Vector3 baseDirection = ResolveThrowDirection(hand, releaseVelocity);
-        Vector3 spawnOrigin = hand.position + baseDirection * spawnOffsetForward;
+        Vector3 spawnOrigin = hand.TransformPoint(releasePointLocalOffset) + baseDirection * spawnClearanceForward;
         float releaseSpeed = releaseVelocity.magnitude;
-        float forceScale = ResolveForceScale(releaseSpeed);
+        Vector3 baseLaunchVelocity = ResolveLaunchVelocity(baseDirection, releaseVelocity);
 
         int count = Mathf.Max(1, spawnCount);
         int spawned = 0;
@@ -77,6 +100,8 @@ public class SeedThrowSpawner : MonoBehaviour
                 rb = seed.AddComponent<Rigidbody>();
             }
 
+            ConfigureSeedPhysics(seed, rb);
+
             SeedProjectileMarker marker = seed.GetComponent<SeedProjectileMarker>();
             if (marker == null)
             {
@@ -100,16 +125,28 @@ public class SeedThrowSpawner : MonoBehaviour
 
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-            float throwForce = Random.Range(forceMin, forceMax) * forceScale;
-            rb.AddForce(spreadDir * throwForce, ForceMode.Impulse);
+            float scatterSpeed = Random.Range(
+                Mathf.Min(scatterSpeedMin, scatterSpeedMax),
+                Mathf.Max(scatterSpeedMin, scatterSpeedMax));
+            Vector3 scatterVelocity = (spreadDir - baseDirection) * baseLaunchVelocity.magnitude + spreadDir * scatterSpeed;
+            rb.linearVelocity = Vector3.ClampMagnitude(baseLaunchVelocity + scatterVelocity, maximumLaunchSpeed);
+            rb.angularVelocity = Vector3.ClampMagnitude(
+                releaseAngularVelocity + Random.insideUnitSphere * scatterSpeed * 8f,
+                maximumAngularSpeed);
             spawned++;
         }
 
         if (logDebug)
         {
             Debug.Log(
-                $"[SeedThrowSpawner] Spawn complete. Requested={count}, Spawned={spawned}, ReleaseSpeed={releaseSpeed:0.###}, ForceScale={forceScale:0.###}.",
+                $"[SeedThrowSpawner] Spawn complete. Requested={count}, Spawned={spawned}, " +
+                $"ReleaseSpeed={releaseSpeed:0.###}, LaunchSpeed={baseLaunchVelocity.magnitude:0.###}.",
                 this);
+        }
+
+        if (spawned > 0)
+        {
+            SeedSowingVfx.EmitReleaseFlecks(spawnOrigin, baseDirection, Mathf.Clamp(spawned, 3, 8));
         }
 
         return spawned;
@@ -118,48 +155,107 @@ public class SeedThrowSpawner : MonoBehaviour
     private Vector3 ResolveThrowDirection(Transform hand, Vector3 releaseVelocity)
     {
         Vector3 handForward = hand.forward.sqrMagnitude > 0.0001f ? hand.forward.normalized : transform.forward;
-        bool hasMovementDirection = releaseVelocity.sqrMagnitude >= minimumReleaseSpeedForVelocityDirection * minimumReleaseSpeedForVelocityDirection;
-
-        if (!useHandForwardDirection && hasMovementDirection)
+        bool hasMovementDirection = releaseVelocity.sqrMagnitude >= minimumMeasuredReleaseSpeed * minimumMeasuredReleaseSpeed;
+        if (hasMovementDirection)
         {
             return releaseVelocity.normalized;
-        }
-
-        if (useHandForwardDirection && handVelocityDirectionWeight > 0f && hasMovementDirection)
-        {
-            return Vector3.Slerp(handForward, releaseVelocity.normalized, handVelocityDirectionWeight).normalized;
         }
 
         return handForward;
     }
 
-    private float ResolveForceScale(float releaseSpeed)
+    private Vector3 ResolveLaunchVelocity(Vector3 baseDirection, Vector3 releaseVelocity)
     {
-        if (!scaleForceByReleaseSpeed)
+        float measuredSpeed = releaseVelocity.magnitude;
+        if (measuredSpeed >= minimumMeasuredReleaseSpeed)
         {
-            return 1f;
+            return Vector3.ClampMagnitude(releaseVelocity * releaseVelocityMultiplier, maximumLaunchSpeed);
         }
 
-        if (releaseSpeedForMaxForce <= releaseSpeedForMinForce)
+        // A small configurable assist lets users complete a release gesture without a
+        // stationary hand producing a seed cloud at the origin.
+        float fallbackSpeed = Mathf.Min(minimumFallbackLaunchSpeed, maximumLaunchSpeed);
+        return baseDirection * fallbackSpeed;
+    }
+
+    private void ConfigureSeedPhysics(GameObject seed, Rigidbody rb)
+    {
+        if (physicsSettings != null)
         {
-            return releaseSpeedForceMultiplierMax;
+            physicsSettings.ApplyTo(rb);
+        }
+        else
+        {
+            rb.mass = fallbackMassKg;
+            rb.useGravity = true;
+            rb.linearDamping = fallbackLinearDamping;
+            rb.angularDamping = fallbackAngularDamping;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
 
-        float speedT = Mathf.InverseLerp(releaseSpeedForMinForce, releaseSpeedForMaxForce, releaseSpeed);
-        return Mathf.Lerp(releaseSpeedForceMultiplierMin, releaseSpeedForceMultiplierMax, speedT);
+        SeedAerodynamics aerodynamics = seed.GetComponent<SeedAerodynamics>();
+        bool enableAerodynamics = physicsSettings != null
+            ? physicsSettings.EnableAerodynamicDrag
+            : fallbackEnableAerodynamicDrag;
+        if (!enableAerodynamics && aerodynamics == null)
+        {
+            return;
+        }
+
+        if (aerodynamics == null)
+        {
+            aerodynamics = seed.AddComponent<SeedAerodynamics>();
+        }
+
+        aerodynamics.Configure(
+            enableAerodynamics,
+            physicsSettings != null ? physicsSettings.DragCoefficient : fallbackDragCoefficient,
+            physicsSettings != null ? physicsSettings.ReferenceAreaSquareMeters : fallbackReferenceAreaSquareMeters);
     }
 
     private GameObject CreateSeedInstance(Vector3 position)
     {
         if (seedCubePrefab != null)
         {
-            return Instantiate(seedCubePrefab, position, Random.rotation);
+            GameObject seed = Instantiate(seedCubePrefab, position, Random.rotation);
+            ApplyVisualScale(seed);
+            return seed;
         }
 
-        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cube.transform.position = position;
-        cube.transform.rotation = Random.rotation;
-        cube.transform.localScale = Vector3.one * seedCubeScale;
-        return cube;
+        GameObject seedFallback = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        seedFallback.transform.position = position;
+        seedFallback.transform.rotation = Random.rotation;
+        ApplyVisualScale(seedFallback);
+        ApplyFallbackSeedMaterial(seedFallback);
+        return seedFallback;
+    }
+
+    private void ApplyVisualScale(GameObject seed)
+    {
+        if (seed == null || !overridePrefabVisualScale)
+        {
+            return;
+        }
+
+        Vector3 clampedAspect = new Vector3(
+            Mathf.Max(0.05f, seedVisualAspect.x),
+            Mathf.Max(0.05f, seedVisualAspect.y),
+            Mathf.Max(0.05f, seedVisualAspect.z));
+        seed.transform.localScale = clampedAspect * seedVisualLengthMeters;
+    }
+
+    private void ApplyFallbackSeedMaterial(GameObject seed)
+    {
+        if (seed == null || !seed.TryGetComponent<Renderer>(out Renderer renderer))
+        {
+            return;
+        }
+
+        Material material = SeedSowingVfx.GetSeedMaterial(seedColor);
+        if (material != null)
+        {
+            renderer.sharedMaterial = material;
+        }
     }
 }

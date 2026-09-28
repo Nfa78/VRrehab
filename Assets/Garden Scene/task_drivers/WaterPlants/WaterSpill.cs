@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Linq;
 using Oculus.Interaction.HandGrab;
 using TaskSystem;
@@ -11,16 +10,19 @@ public class WaterSpill : MonoBehaviour
     [SerializeField] private SimObjectiveInteraction pickObjectiveInteraction;
     [SerializeField] private WaterPlantsTaskDriver taskDriver;
     [SerializeField] private WaterSpillSetup spillSetup;
-    [SerializeField] private float pollInterval = 1f;
-    [SerializeField] private float movementThreshold = 0.01f;
-    [SerializeField] private float spillDuration = 1.1f;
+    [Tooltip("Minimum watering-can movement speed in metres per second required to keep pouring.")]
+    [SerializeField] [Min(0f)] private float movementThreshold = 0.01f;
     [SerializeField] private float tiltThreshold = 35f;
+    [Tooltip("How long the can must remain tilted before water starts. This filters brief accidental movements.")]
+    [SerializeField] [Min(0f)] private float pourStartDelay = 0.15f;
+    [Tooltip("The can stops pouring below the start angle minus this amount, preventing flicker from hand tremor.")]
+    [SerializeField] [Range(0f, 30f)] private float tiltReleaseBuffer = 8f;
     [SerializeField] private bool completePickObjectiveOnGrab = true;
     [SerializeField] private bool keepPickObjectiveSyncedToHoldState = true;
 
     [Header("Debug")]
-    [SerializeField] private bool logSpillState = true;
-    [SerializeField] private bool logPickObjective = true;
+    [SerializeField] private bool logSpillState;
+    [SerializeField] private bool logPickObjective;
     [SerializeField] private bool isGrabbed;
     [SerializeField] private bool isMoving;
     [SerializeField] private bool isTilted;
@@ -29,8 +31,8 @@ public class WaterSpill : MonoBehaviour
     public bool IsSpilling => isSpilling;
 
     private Vector3 previousPosition;
-    private Coroutine spillRoutine;
     private bool wasGrabbedLastFrame;
+    private float tiltHeldSeconds;
 
 
     private void Awake()
@@ -73,13 +75,16 @@ public class WaterSpill : MonoBehaviour
         }
 
         previousPosition = transform.position;
-        InvokeRepeating(nameof(MovementPolling), pollInterval, pollInterval);
+    }
+
+    private void Update()
+    {
+        UpdateGrabState();
+        UpdatePourState();
     }
 
     private void LateUpdate()
     {
-        UpdateGrabState();
-
         if (!isSpilling || spillSetup.WaterParticles == null)
         {
             return;
@@ -88,68 +93,68 @@ public class WaterSpill : MonoBehaviour
         spillSetup.AlignParticlesToExitPoint();
     }
 
-    private void MovementPolling()
+    private void UpdatePourState()
     {
-        isGrabbed = IsCurrentlyGrabbed();
-
         Vector3 currentPosition = transform.position;
         float distanceMoved = Vector3.Distance(currentPosition, previousPosition);
-        isMoving = distanceMoved > movementThreshold;
+        float movementSpeed = Time.deltaTime > 0.0001f ? distanceMoved / Time.deltaTime : 0f;
+        isMoving = movementSpeed > movementThreshold;
         previousPosition = currentPosition;
 
         float tiltAngle = Vector3.Angle(Vector3.up, transform.up);
-        isTilted = tiltAngle > tiltThreshold;
+        float releaseThreshold = Mathf.Max(0f, tiltThreshold - tiltReleaseBuffer);
+        float requiredTilt = isSpilling ? releaseThreshold : tiltThreshold;
+        isTilted = tiltAngle >= requiredTilt;
 
-        if (logSpillState)
+        if (!isGrabbed || !isTilted || !isMoving)
         {
-            Debug.Log(
-                $"[WaterSpill] Poll {name}: grabbed={isGrabbed}, moving={isMoving}, tilted={isTilted}, distanceMoved={distanceMoved:F3}, tiltAngle={tiltAngle:F1}.",
-                this);
-        }
-
-        if (isGrabbed && (isMoving || isTilted))
-        {
-            if (spillRoutine != null)
-            {
-                StopCoroutine(spillRoutine);
-            }
-
-            spillRoutine = StartCoroutine(WaterSpilling());
+            tiltHeldSeconds = 0f;
+            StopSpilling();
             return;
         }
 
-        StopSpilling();
+        if (isSpilling)
+        {
+            return;
+        }
+
+        tiltHeldSeconds += Time.deltaTime;
+        if (tiltHeldSeconds >= pourStartDelay)
+        {
+            StartSpilling();
+        }
     }
 
-    private IEnumerator WaterSpilling()
+    private void StartSpilling()
     {
         isSpilling = true;
 
         ParticleSystem waterParticles = spillSetup.WaterParticles;
-        if (waterParticles != null)
+        if (waterParticles == null)
         {
-            spillSetup.AlignParticlesToExitPoint();
-
-            if (logSpillState)
-            {
-                Debug.Log(
-                    $"[WaterSpill] Spilling from {waterParticles.name} at {waterParticles.transform.position}.",
-                    this);
-            }
-
-            if (!waterParticles.isPlaying)
-            {
-                waterParticles.Clear();
-                waterParticles.Play();
-            }
+            return;
         }
 
-        yield return new WaitForSeconds(spillDuration);
-        StopSpilling();
+        spillSetup.AlignParticlesToExitPoint();
+        if (logSpillState)
+        {
+            Debug.Log($"[WaterSpill] Started pouring from {waterParticles.name}.", this);
+        }
+
+        if (!waterParticles.isPlaying)
+        {
+            waterParticles.Clear();
+            waterParticles.Play();
+        }
     }
 
     private void StopSpilling()
     {
+        if (!isSpilling)
+        {
+            return;
+        }
+
         isSpilling = false;
 
         if (logSpillState)
@@ -162,13 +167,11 @@ public class WaterSpill : MonoBehaviour
         {
             waterParticles.Stop();
         }
-
-        spillRoutine = null;
     }
 
-    public void ApplyDifficulty(float newSpillDuration, float newTiltThreshold)
+    public void ApplyDifficulty(float newPourStartDelay, float newTiltThreshold)
     {
-        spillDuration = Mathf.Max(0.01f, newSpillDuration);
+        pourStartDelay = Mathf.Max(0f, newPourStartDelay);
         tiltThreshold = Mathf.Clamp(newTiltThreshold, 0f, 180f);
     }
 

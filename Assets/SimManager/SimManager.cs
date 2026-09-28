@@ -76,6 +76,7 @@ namespace TaskSystem
         public event Action<SimTask> LogicalTaskEnded;
         public event Action<SimTask> LogicalTaskCompleted;
         public event Action<SimTask, string> LogicalTaskFailed;
+        public event Action<SimTask, string> LogicalTaskAbandoned;
         public event Action<SimTask, SimTaskObjective> LogicalTaskStepChanged;
         public event Action<SimTask, SimTaskObjective> LogicalTaskObjectiveProgressChanged;
         public event Action<SimTask, SimTaskObjective> LogicalTaskObjectiveCompleted;
@@ -184,6 +185,10 @@ namespace TaskSystem
 
             CancelPendingTaskTransition();
             RestoreUnityTime();
+            if (CurrentTask != null && IsRunning)
+            {
+                LogicalTaskAbandoned?.Invoke(CurrentTask, "Simulation stopped by user.");
+            }
             CurrentTask?.PauseTask(CurrentClock);
             UnbindCurrentTaskDriver(notifyStopped: true);
             _currentTaskIndex = -1;

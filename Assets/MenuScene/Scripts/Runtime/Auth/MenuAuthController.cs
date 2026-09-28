@@ -20,7 +20,11 @@ namespace VRStrokeRehab.MenuScene
 
         public AdaptiveApiClient ApiClient
         {
-            get { return apiClient; }
+            get
+            {
+                ResolveApiClientReference();
+                return apiClient;
+            }
         }
 
         public LoginPanelView LoginPanel
@@ -35,11 +39,17 @@ namespace VRStrokeRehab.MenuScene
 
         public bool HasAuthenticatedSession
         {
-            get { return apiClient != null && apiClient.HasAccessToken; }
+            get
+            {
+                ResolveApiClientReference();
+                return apiClient != null && apiClient.HasAccessToken;
+            }
         }
 
         private void Awake()
         {
+            ResolveApiClientReference();
+
             if (loginPanel != null)
             {
                 loginPanel.SubmitRequested += HandleLoginSubmitted;
@@ -66,6 +76,8 @@ namespace VRStrokeRehab.MenuScene
 
         public void SignOut()
         {
+            ResolveApiClientReference();
+
             if (apiClient != null)
             {
                 apiClient.ClearAuthSession();
@@ -84,6 +96,8 @@ namespace VRStrokeRehab.MenuScene
 
         public bool HasRequiredReferences(out string message)
         {
+            ResolveApiClientReference();
+
             if (apiClient == null)
             {
                 message = "AdaptiveApiClient is not assigned.";
@@ -149,6 +163,7 @@ namespace VRStrokeRehab.MenuScene
 
         private IEnumerator SignInRoutine(string email, string password)
         {
+            ResolveApiClientReference();
             isBusy = true;
             SetPanelsInteractable(false);
             loginPanel.ClearStatus();
@@ -188,6 +203,7 @@ namespace VRStrokeRehab.MenuScene
 
         private IEnumerator SignUpRoutine(string email, string password)
         {
+            ResolveApiClientReference();
             isBusy = true;
             SetPanelsInteractable(false);
             signupPanel.ClearStatus();
@@ -327,6 +343,14 @@ namespace VRStrokeRehab.MenuScene
             }
 
             return fallback;
+        }
+
+        private void ResolveApiClientReference()
+        {
+            if (AdaptiveApiClient.Instance != null)
+            {
+                apiClient = AdaptiveApiClient.Instance;
+            }
         }
     }
 }

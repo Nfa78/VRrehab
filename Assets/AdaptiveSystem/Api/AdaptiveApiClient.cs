@@ -28,6 +28,14 @@ namespace AdaptiveSystem.Api
         [SerializeField] private string publishableKey = string.Empty;
         [SerializeField] private AuthSessionResponse authSession = new AuthSessionResponse();
 
+        /// <summary>
+        /// The authenticated API client shared by the menu and task scenes.
+        /// The client owns the configured endpoints and mirrors the session in
+        /// AdaptiveRuntimeContext, so callers in a later scene keep using the
+        /// account that signed in at the menu.
+        /// </summary>
+        public static AdaptiveApiClient Instance { get; private set; }
+
         public bool LoadConnectionSettingsFromJson
         {
             get { return loadConnectionSettingsFromJson; }
@@ -84,6 +92,20 @@ namespace AdaptiveSystem.Api
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning(
+                    "[AdaptiveApiClient] Duplicate client on '" + gameObject.name +
+                    "' was removed. The persistent client remains active.",
+                    this);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            Debug.Log("[AdaptiveApiClient] Registered persistent client '" + gameObject.name + "'.", this);
+
             if (!loadConnectionSettingsFromJson)
             {
                 RestoreRuntimeAuthSessionIfNeeded();
@@ -99,6 +121,14 @@ namespace AdaptiveSystem.Api
 
             ApplyConnectionSettings(connectionSettings);
             RestoreRuntimeAuthSessionIfNeeded();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         public string GetConnectionSettingsFilePath()
@@ -310,19 +340,36 @@ namespace AdaptiveSystem.Api
             return SendRequest<TaskMetricsResponse>(RequestScope.PrivateApi, AdaptiveApiRoutes.TaskMetrics(taskExecutionId).ToPath(), UnityWebRequest.kHttpVerbPOST, request, onComplete);
         }
 
+        public IEnumerator SubmitTaskProgressAsync(string taskExecutionId, TaskProgressRequest request, Action<ApiResult<TaskProgressResponse>> onComplete)
+        {
+            return SendRequest<TaskProgressResponse>(RequestScope.PrivateApi, AdaptiveApiRoutes.TaskProgress(taskExecutionId).ToPath(), UnityWebRequest.kHttpVerbPOST, request, onComplete);
+        }
+
         public IEnumerator GetTaskMetricsAsync(string taskExecutionId, Action<ApiResult<TaskMetricsGetResponse>> onComplete)
         {
             return SendRequest<TaskMetricsGetResponse>(RequestScope.PrivateApi, AdaptiveApiRoutes.TaskMetrics(taskExecutionId).ToPath(), UnityWebRequest.kHttpVerbGET, null, onComplete);
         }
 
-        public IEnumerator EndTaskExecutionAsync(string taskExecutionId, string endTime, Action<ApiResult<TaskEndResponse>> onComplete)
+        public IEnumerator EndTaskExecutionAsync(
+            string taskExecutionId,
+            string endTime,
+            string outcome,
+            string failureReason,
+            Action<ApiResult<TaskEndResponse>> onComplete)
         {
             var request = new TaskEndRequest
             {
-                end_time = endTime
+                end_time = endTime,
+                outcome = outcome,
+                failure_reason = failureReason
             };
 
             return SendRequest<TaskEndResponse>(RequestScope.PrivateApi, AdaptiveApiRoutes.TaskExecutionEnd(taskExecutionId).ToPath(), UnityWebRequest.kHttpVerbPOST, request, onComplete);
+        }
+
+        public IEnumerator EndTaskExecutionAsync(string taskExecutionId, string endTime, Action<ApiResult<TaskEndResponse>> onComplete)
+        {
+            return EndTaskExecutionAsync(taskExecutionId, endTime, string.Empty, null, onComplete);
         }
 
         public IEnumerator EndSessionAsync(string sessionId, string endTime, Action<ApiResult<SessionEndResponse>> onComplete)
@@ -339,6 +386,7 @@ namespace AdaptiveSystem.Api
         {
             authSession = new AuthSessionResponse();
             AdaptiveRuntimeContext.ClearAuthSession();
+            Debug.Log("[AdaptiveApiClient] Authentication session cleared.", this);
         }
 
         public AuthSessionResponse GetAuthSessionCopy()
@@ -451,6 +499,11 @@ namespace AdaptiveSystem.Api
             authSession.refresh_token = session.refresh_token;
             authSession.user = session.user;
             AdaptiveRuntimeContext.SetAuthSession(authSession);
+            Debug.Log(
+                "[AdaptiveApiClient] Authentication session stored. user=" +
+                AdaptiveRuntimeContext.ResolveAuthenticatedEmail() +
+                " tokenPresent=" + HasAccessToken,
+                this);
         }
 
         private bool TryReadConnectionSettings(out ConnectionSettings settings, out string error)

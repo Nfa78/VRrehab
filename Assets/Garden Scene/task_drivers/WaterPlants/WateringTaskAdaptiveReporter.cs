@@ -29,6 +29,7 @@ namespace TaskSystem
         [SerializeField] private bool autoStartSession = true;
         [SerializeField] private bool autoApplyAdaptiveDecisionToNextRun = true;
         [SerializeField] [Min(0.1f)] private float taskExecutionStartWaitSeconds = 5f;
+        [SerializeField] [Min(0.5f)] private float progressSnapshotIntervalSeconds = 3f;
         [SerializeField] private bool logAdaptiveFlow = true;
 
         [Header("Patient Defaults")]
@@ -55,6 +56,7 @@ namespace TaskSystem
 
         private bool subscribedToTracker;
         private AdaptiveTaskAttemptContext currentAttempt;
+        private Coroutine progressSnapshotCoroutine;
 
         private void Awake()
         {
@@ -76,6 +78,7 @@ namespace TaskSystem
 
         private void OnDisable()
         {
+            StopProgressSnapshotReporting();
             UnsubscribeFromTracker();
         }
 
@@ -95,6 +98,12 @@ namespace TaskSystem
         {
             if (!adaptiveReportingEnabled || !IsOwnedTaskReport(report))
             {
+                return;
+            }
+
+            if (currentAttempt != null)
+            {
+                LogWarning($"Ignoring duplicate task-run start for '{report.taskId}' while attempt '{currentAttempt.taskId}' is still active.");
                 return;
             }
 
@@ -127,6 +136,10 @@ namespace TaskSystem
             }
 
             AdaptiveTaskAttemptContext completedAttempt = currentAttempt;
+            if (completedAttempt != null)
+            {
+                completedAttempt.finalizationStarted = true;
+            }
             currentAttempt = null;
             StartCoroutine(SubmitMetricsForAttempt(report, completedAttempt));
         }
@@ -134,6 +147,18 @@ namespace TaskSystem
         private IEnumerator BeginAdaptiveAttempt(AdaptiveTaskAttemptContext attempt)
         {
             yield return AdaptiveTaskReporterFlow.BeginAdaptiveAttempt(CreateFlowBindings(), attempt);
+            if (attempt == currentAttempt && attempt.startSucceeded && !attempt.finalizationStarted)
+            {
+                progressSnapshotCoroutine = StartCoroutine(SubmitProgressSnapshots(attempt));
+            }
+        }
+
+        private IEnumerator SubmitProgressSnapshots(AdaptiveTaskAttemptContext attempt)
+        {
+            yield return AdaptiveTaskReporterFlow.SubmitProgressSnapshots(
+                CreateFlowBindings(buildProgressRequest: BuildProgressRequest),
+                attempt);
+            progressSnapshotCoroutine = null;
         }
 
         private IEnumerator SubmitMetricsForAttempt(
@@ -151,7 +176,9 @@ namespace TaskSystem
                     () => BuildMetricsRequest(report),
                     report.taskId,
                     attempt != null ? attempt.difficultyLevel : ResolveDifficultyLevelForAttempt(report),
-                    ResolveTaskEndTime(report)),
+                    ResolveTaskEndTime(report),
+                    report.outcome,
+                    report.failureReason),
                 attempt);
         }
 
@@ -159,7 +186,10 @@ namespace TaskSystem
             Func<TaskMetricsRequest> buildMetricsRequest = null,
             string taskId = "",
             int currentDifficultyLevel = 1,
-            string taskEndTimeUtc = "")
+            string taskEndTimeUtc = "",
+            string taskOutcome = "completed",
+            string taskFailureReason = "",
+            Func<TaskProgressRequest> buildProgressRequest = null)
         {
             return new AdaptiveTaskReporterFlow.Bindings
             {
@@ -168,10 +198,14 @@ namespace TaskSystem
                 AutoStartSession = autoStartSession,
                 AutoApplyAdaptiveDecisionToNextRun = autoApplyAdaptiveDecisionToNextRun,
                 TaskExecutionStartWaitSeconds = taskExecutionStartWaitSeconds,
+                ProgressSnapshotIntervalSeconds = progressSnapshotIntervalSeconds,
                 TaskId = taskId,
                 CurrentDifficultyLevel = currentDifficultyLevel,
                 TaskEndTimeUtc = taskEndTimeUtc,
+                TaskOutcome = taskOutcome,
+                TaskFailureReason = taskFailureReason,
                 BuildMetricsRequest = buildMetricsRequest,
+                BuildProgressRequest = buildProgressRequest,
                 GetActiveSessionId = () => activeSessionId,
                 SetActiveSessionId = value => activeSessionId = value ?? string.Empty,
                 GetActiveTaskExecutionId = () => activeTaskExecutionId,
@@ -194,6 +228,36 @@ namespace TaskSystem
                 LogInfo = LogInfo,
                 LogWarning = LogWarning
             };
+        }
+
+        private TaskProgressRequest BuildProgressRequest()
+        {
+            if (taskTracker == null || !taskTracker.TryGetCurrentTaskReport(out WateringTaskTracker.TaskRunReport report))
+            {
+                return null;
+            }
+
+            TaskMetricsRequest metrics = BuildMetricsRequest(report);
+            float elapsedSeconds = simManager != null
+                ? Mathf.Max(0f, simManager.GetCurrentTaskElapsedSeconds())
+                : Mathf.Max(0f, report.attemptElapsedSeconds);
+            metrics.global_metrics.completion_time = elapsedSeconds;
+            return new TaskProgressRequest
+            {
+                elapsed_seconds = elapsedSeconds,
+                global_metrics = metrics.global_metrics,
+                scene_metrics = metrics.scene_metrics,
+                task_details = AdaptiveTaskReporterFlow.BuildTaskDetails(simManager)
+            };
+        }
+
+        private void StopProgressSnapshotReporting()
+        {
+            if (progressSnapshotCoroutine != null)
+            {
+                StopCoroutine(progressSnapshotCoroutine);
+                progressSnapshotCoroutine = null;
+            }
         }
 
         private TaskMetricsRequest BuildMetricsRequest(WateringTaskTracker.TaskRunReport report)
@@ -441,7 +505,11 @@ namespace TaskSystem
 
             if (adaptiveApi == null)
             {
-                adaptiveApi = FindSceneComponent<AdaptiveApiClient>();
+                adaptiveApi = AdaptiveApiClient.Instance;
+                if (adaptiveApi == null)
+                {
+                    adaptiveApi = FindSceneComponent<AdaptiveApiClient>();
+                }
             }
 
             if (trajectoryTarget == null && taskDriver != null)
@@ -501,6 +569,17 @@ namespace TaskSystem
             taskTracker.TaskRunStarted += HandleTaskRunStarted;
             taskTracker.TaskRunCompleted += HandleTaskRunCompleted;
             subscribedToTracker = true;
+            LogInfo($"Subscribed to task tracker. adaptiveReportingEnabled={adaptiveReportingEnabled}, taskDriver={(taskDriver != null ? taskDriver.TaskId : "<missing>")}.");
+
+            if (taskTracker.TryGetCurrentTaskReport(out WateringTaskTracker.TaskRunReport activeReport))
+            {
+                LogInfo($"Recovered active task run after late subscription: taskId={activeReport.taskId}, attempt={activeReport.attemptIndex}.");
+                HandleTaskRunStarted(activeReport);
+            }
+            else
+            {
+                LogInfo("No active task run to recover at subscription time.");
+            }
         }
 
         private void UnsubscribeFromTracker()

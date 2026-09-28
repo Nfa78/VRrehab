@@ -115,7 +115,7 @@ namespace TaskSystem
             {
                 if (waterSpills[i] != null)
                 {
-                    waterSpills[i].ApplyDifficulty(profile.spillDuration, profile.tiltThreshold);
+                    waterSpills[i].ApplyDifficulty(profile.pourStartDelay, profile.tiltThreshold);
                 }
             }
 
@@ -335,7 +335,7 @@ namespace TaskSystem
             [Min(0.01f)] public float waterTriggerLength = 1f;
             [Min(0.01f)] public float plantHitboxScale = 1f;
             [Range(0f, 180f)] public float tiltThreshold = 35f;
-            [Min(0.01f)] public float spillDuration = 1.1f;
+            [Min(0f)] public float pourStartDelay = 0.15f;
             [Min(0f)] public float returnZoneRadius = 0.35f;
 
             public static DifficultyProfile Current(int level)

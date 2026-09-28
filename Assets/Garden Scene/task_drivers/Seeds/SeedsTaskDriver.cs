@@ -17,6 +17,17 @@ namespace TaskSystem
         [SerializeField] private SeedThrowSpawner seedThrowSpawner;
         [SerializeField] private SeedThrowArrow seedThrowArrow;
 
+        [Header("Soil Regions")]
+        [Tooltip("Assign up to four transparent soil cubes. They configure themselves as seed targets at runtime.")]
+        [SerializeField] private GameObject[] soilRegionObjects = new GameObject[4];
+        [SerializeField] [Min(1)] private int seedsPerRegion = 5;
+        [SerializeField] private Color emptySoilRegionColor = new Color(0.25f, 0.55f, 1f, 0.2f);
+        [SerializeField] private Color fullSoilRegionColor = new Color(0.25f, 1f, 0.4f, 0.5f);
+        [SerializeField] [Min(0.01f)] private float soilRegionMetallicPulseSpeed = 1f;
+        [SerializeField] private bool disableLegacyGatesWhenUsingSoilRegions = true;
+
+        private SeedSoilRegion[] soilRegions = Array.Empty<SeedSoilRegion>();
+
         [Header("Difficulty Profiles")]
         [SerializeField] private DifficultyProfile[] difficultyProfiles = CreateDefaultDifficultyProfiles();
 
@@ -27,14 +38,29 @@ namespace TaskSystem
 
         private void Awake()
         {
+            ConfigureSoilRegions();
             EnsureTaskTracker();
             EnsureAdaptiveReporter();
         }
 
         private void OnEnable()
         {
+            ConfigureSoilRegions();
             EnsureTaskTracker();
             EnsureAdaptiveReporter();
+        }
+
+        public override void OnTaskStarted()
+        {
+            ConfigureSoilRegions();
+            ResetSoilRegions();
+            base.OnTaskStarted();
+        }
+
+        public override void OnTaskResetToStep(SimTaskObjective step, int stepIndex)
+        {
+            ResetSoilRegions();
+            base.OnTaskResetToStep(step, stepIndex);
         }
 
         public override void ApplyDifficulty(int level)
@@ -45,17 +71,21 @@ namespace TaskSystem
                 return;
             }
 
-            SimTask?.SetTimeLimitSeconds(profile.timeLimitSeconds);
-            SimTask?.SetObjectiveMaxValue(throwStepId, profile.requiredSuccessfulThrows);
-
             ResolveDifficultyTargets();
+            ConfigureSoilRegions();
+
+            SimTask?.SetTimeLimitSeconds(profile.timeLimitSeconds);
+            float requiredSuccessfulThrows = HasSoilRegions
+                ? soilRegions.Length * Mathf.Max(1, seedsPerRegion)
+                : profile.requiredSuccessfulThrows;
+            SimTask?.SetObjectiveMaxValue(throwStepId, requiredSuccessfulThrows);
 
             if (seedPickupState != null)
             {
                 seedPickupState.ApplyDifficulty(profile.seedPickupRadius);
             }
 
-            if (seedGateSequence != null)
+            if (seedGateSequence != null && !HasSoilRegions)
             {
                 seedGateSequence.ApplyDifficulty(
                     profile.activeGateCount,
@@ -149,6 +179,70 @@ namespace TaskSystem
             if (seedThrowArrow == null)
             {
                 seedThrowArrow = FindFirstObjectByType<SeedThrowArrow>(FindObjectsInactive.Include);
+            }
+        }
+
+        private bool HasSoilRegions => soilRegions != null && soilRegions.Length > 0;
+
+        private void ConfigureSoilRegions()
+        {
+            if (soilRegionObjects == null || soilRegionObjects.Length == 0)
+            {
+                soilRegions = Array.Empty<SeedSoilRegion>();
+                SetLegacyGateSequenceActive(true);
+                return;
+            }
+
+            var configuredRegions = new System.Collections.Generic.List<SeedSoilRegion>(soilRegionObjects.Length);
+            for (int i = 0; i < soilRegionObjects.Length; i++)
+            {
+                GameObject regionObject = soilRegionObjects[i];
+                if (regionObject == null)
+                {
+                    continue;
+                }
+
+                SeedSoilRegion region = regionObject.GetComponent<SeedSoilRegion>();
+                if (region == null)
+                {
+                    region = regionObject.AddComponent<SeedSoilRegion>();
+                }
+
+                region.Configure(
+                    this,
+                    seedsPerRegion,
+                    emptySoilRegionColor,
+                    fullSoilRegionColor,
+                    soilRegionMetallicPulseSpeed);
+                configuredRegions.Add(region);
+            }
+
+            soilRegions = configuredRegions.ToArray();
+            SetLegacyGateSequenceActive(!HasSoilRegions);
+        }
+
+        private void ResetSoilRegions()
+        {
+            for (int i = 0; i < soilRegions.Length; i++)
+            {
+                if (soilRegions[i] != null)
+                {
+                    soilRegions[i].ResetFill();
+                }
+            }
+        }
+
+        private void SetLegacyGateSequenceActive(bool active)
+        {
+            if (!disableLegacyGatesWhenUsingSoilRegions)
+            {
+                return;
+            }
+
+            ResolveDifficultyTargets();
+            if (seedGateSequence != null && seedGateSequence.gameObject.activeSelf != active)
+            {
+                seedGateSequence.gameObject.SetActive(active);
             }
         }
 

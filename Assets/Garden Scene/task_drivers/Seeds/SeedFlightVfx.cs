@@ -6,8 +6,9 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class SeedFlightVfx : MonoBehaviour
 {
-    [Header("Trail")]
-    [SerializeField] private bool enableTrail = true;
+    [Header("Optional Trail")]
+    [Tooltip("Disabled by default. Seeds read better as individual objects than as bright projectile trails.")]
+    [SerializeField] private bool enableTrail;
     [SerializeField] private Color trailColor = new Color(1f, 0.9f, 0.35f, 0.9f);
     [SerializeField] private float trailTime = 0.35f;
     [SerializeField] private float trailStartWidth = 0.014f;
@@ -26,9 +27,13 @@ public class SeedFlightVfx : MonoBehaviour
         }
 
         _initialized = true;
-        if (enableTrail)
+        if (enableTrail && trailMaterial != null && trailMaterial.shader != null && trailMaterial.shader.isSupported)
         {
             EnsureTrailRenderer();
+        }
+        else
+        {
+            DisableTrailRenderer();
         }
 
         float lifetime = lifetimeOverrideSeconds > 0f ? lifetimeOverrideSeconds : lifetimeSeconds;
@@ -70,9 +75,16 @@ public class SeedFlightVfx : MonoBehaviour
             });
         trail.colorGradient = gradient;
 
-        if (trailMaterial != null)
+        trail.sharedMaterial = trailMaterial;
+    }
+
+    private void DisableTrailRenderer()
+    {
+        TrailRenderer trail = GetComponent<TrailRenderer>();
+        if (trail != null)
         {
-            trail.material = trailMaterial;
+            trail.emitting = false;
+            trail.enabled = false;
         }
     }
 }

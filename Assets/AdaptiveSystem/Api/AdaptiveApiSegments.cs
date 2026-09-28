@@ -12,6 +12,7 @@
         public const string Patients = "patients";
         public const string Me = "me";
         public const string Metrics = "metrics";
+        public const string Progress = "progress";
         public const string Levels = "levels";
         public const string TaskExecutions = "task-executions";
     }
