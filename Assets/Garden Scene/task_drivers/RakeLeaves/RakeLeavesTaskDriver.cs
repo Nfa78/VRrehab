@@ -1,5 +1,6 @@
 using System;
 using Oculus.Interaction.HandGrab;
+using SoundSystem;
 using UnityEngine;
 
 namespace TaskSystem
@@ -7,6 +8,8 @@ namespace TaskSystem
     [DisallowMultipleComponent]
     public sealed class RakeLeavesTaskDriver : SimTaskDriver
     {
+        public const string RakeTaskId = "rake_leaves";
+
         [Header("Objectives")]
         [SerializeField] private string pickupHoeStepId = "pickup_hoe";
         [SerializeField] private string rakeLeavesStepId = "rake_leaves";
@@ -24,6 +27,9 @@ namespace TaskSystem
         [SerializeField] private bool makeKinematicOnReturn = true;
         [SerializeField] private bool logDebug;
 
+        [Header("Rake Field")]
+        [SerializeField] private RakeLeafFieldController rakeLeafField;
+
         [Header("Difficulty Profiles")]
         [SerializeField] private DifficultyProfile[] difficultyProfiles = CreateDefaultDifficultyProfiles();
 
@@ -38,7 +44,7 @@ namespace TaskSystem
         public event Action<RakedLeafProgressReporter, float> RakeProgressAccepted;
         public event Action<float> HoeReturned;
 
-        public override string TaskId => "rake_leaves";
+        public override string TaskId => RakeTaskId;
         public string PickupHoeStepId => pickupHoeStepId;
         public string RakeLeavesStepId => rakeLeavesStepId;
         public string ReturnHoeStepId => returnHoeStepId;
@@ -65,6 +71,7 @@ namespace TaskSystem
             CaptureInitialHoePoseIfNeeded();
             EnsureTaskTracker();
             EnsureAdaptiveReporter();
+            EnsureRakeLeafField();
         }
 
         private void OnEnable()
@@ -73,6 +80,7 @@ namespace TaskSystem
             CaptureInitialHoePoseIfNeeded();
             EnsureTaskTracker();
             EnsureAdaptiveReporter();
+            EnsureRakeLeafField();
         }
 
         private void Update()
@@ -90,6 +98,10 @@ namespace TaskSystem
             if (isHoeGrabbed != wasHoeGrabbedLastFrame)
             {
                 HoeGrabStateChanged?.Invoke(isHoeGrabbed);
+                if (isHoeGrabbed)
+                {
+                    EventSoundManager.TryPlayAt("garden.hoe.grabbed", hoeObject.transform.position);
+                }
             }
 
             if (IsPickupHoeStepActive() && isHoeGrabbed && !wasHoeGrabbedLastFrame)
@@ -274,6 +286,7 @@ namespace TaskSystem
             }
 
             HoeReturned?.Invoke(distance);
+            EventSoundManager.TryPlayAt("garden.hoe.returned", initialHoePose.position);
             ApplyReturnedHoePose();
             if (logDebug)
             {
@@ -364,6 +377,21 @@ namespace TaskSystem
             }
         }
 
+        private void EnsureRakeLeafField()
+        {
+            if (rakeLeafField == null)
+            {
+                rakeLeafField = GetComponent<RakeLeafFieldController>();
+            }
+
+            if (rakeLeafField == null)
+            {
+                rakeLeafField = gameObject.AddComponent<RakeLeafFieldController>();
+            }
+
+            rakeLeafField.Configure(this, HoeTransform);
+        }
+
         private static DifficultyProfile[] CreateDefaultDifficultyProfiles()
         {
             return new[]
@@ -378,8 +406,8 @@ namespace TaskSystem
         private sealed class DifficultyProfile
         {
             public int level = 1;
-            [Min(0f)] public float timeLimitSeconds = 10f;
-            [Min(1f)] public float requiredRakedLeaves = 1f;
+            [Min(0f)] public float timeLimitSeconds = 45f;
+            [Min(1f)] public float requiredRakedLeaves = 6f;
 
             public static DifficultyProfile Current(int level)
             {

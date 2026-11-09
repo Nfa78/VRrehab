@@ -12,6 +12,12 @@ namespace TriggerSystem
     public sealed class TSParasite : MonoBehaviour
     {
         private const string DefaultDetectTag = "HandAnchor";
+        public const string ProcessingRootTag = "TSTag";
+
+        [Header("Scope")]
+        [Tooltip("When enabled, this parasite runs only when its GameObject or an ancestor has Scope Root Tag.")]
+        [SerializeField] private bool requireScopeTag = true;
+        [SerializeField] private string scopeRootTag = ProcessingRootTag;
 
         [Header("Detection")]
         [SerializeField][Min(0f)] private float detectionRadius = 1.4f;
@@ -41,6 +47,7 @@ namespace TriggerSystem
         private float nextTargetRefreshTime;
         private GameObject closestTarget;
         private float closestDistance = Mathf.Infinity;
+        private bool isInProcessingScope;
 
         private static readonly Dictionary<string, TaggedObjectCache> TaggedObjectCaches =
             new Dictionary<string, TaggedObjectCache>();
@@ -66,6 +73,7 @@ namespace TriggerSystem
         public GameObject ClosestTarget => closestTarget;
         public float ClosestDistance => closestDistance;
         public IReadOnlyList<GameObject> TargetsInsideRadius => targetsInsideRadius;
+        public bool IsInProcessingScope => isInProcessingScope;
         public TSRadiusGameObjectEvent OnRadiusEnter => onRadiusEnter;
         public TSRadiusGameObjectEvent OnRadiusExit => onRadiusExit;
         public TSRadiusGameObjectEvent OnRadiusEnterGameObject => onRadiusEnter;
@@ -79,10 +87,17 @@ namespace TriggerSystem
         private void Awake()
         {
             EnsureDetectTags();
+            RefreshProcessingScope();
         }
 
         private void OnEnable()
         {
+            RefreshProcessingScope();
+            if (!isInProcessingScope)
+            {
+                return;
+            }
+
             RefreshTargetsByTag(true);
         }
 
@@ -93,8 +108,32 @@ namespace TriggerSystem
 
         private void Update()
         {
+            if (!isInProcessingScope)
+            {
+                return;
+            }
+
             RefreshTargetsByTag(false);
             UpdateRadiusState();
+        }
+
+        private void OnTransformParentChanged()
+        {
+            RefreshProcessingScope();
+        }
+
+        /// <summary>
+        /// Applies the manager's TSTag policy. Explicitly created parasites use the
+        /// same policy, preventing a collider outside the tagged hierarchy from
+        /// quietly becoming a per-frame TS workload.
+        /// </summary>
+        public void ConfigureScope(bool requireTag, string rootTag)
+        {
+            requireScopeTag = requireTag;
+            scopeRootTag = string.IsNullOrWhiteSpace(rootTag)
+                ? ProcessingRootTag
+                : rootTag;
+            RefreshProcessingScope();
         }
 
         public TSParasite Configure(
@@ -116,12 +155,22 @@ namespace TriggerSystem
 
             EnsureDetectTags();
             ClearTargets();
-            RefreshTargetsByTag(true);
+            RefreshProcessingScope();
+            if (isInProcessingScope)
+            {
+                RefreshTargetsByTag(true);
+            }
+
             return this;
         }
 
         public TSParasite Set(string tag, GameObject target = null)
         {
+            if (!isInProcessingScope)
+            {
+                return this;
+            }
+
             RegisterTag(tag);
 
             if (target != null)
@@ -143,6 +192,40 @@ namespace TriggerSystem
             {
                 detectTags.Add(DefaultDetectTag);
             }
+        }
+
+        private void RefreshProcessingScope()
+        {
+            bool wasInScope = isInProcessingScope;
+            isInProcessingScope = IsWithinProcessingScope();
+
+            if (wasInScope && !isInProcessingScope)
+            {
+                ClearTargets();
+            }
+        }
+
+        private bool IsWithinProcessingScope()
+        {
+            if (!requireScopeTag)
+            {
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(scopeRootTag))
+            {
+                return false;
+            }
+
+            for (Transform current = transform; current != null; current = current.parent)
+            {
+                if (string.Equals(current.tag, scopeRootTag, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void RegisterTag(string tag)
@@ -327,6 +410,7 @@ namespace TriggerSystem
             RadiusEntered?.Invoke(target);
             onTargetEntered?.Invoke(target);
             onRadiusEnter?.Invoke(target);
+            Debug.Log($"[{gameObject.name}] attached parasite logs RADIUS ENTERED object : {target.name} !");
         }
 
         private void RaiseRadiusExited(GameObject target)
@@ -335,6 +419,8 @@ namespace TriggerSystem
             RadiusExited?.Invoke(target);
             onTargetExited?.Invoke(target);
             onRadiusExit?.Invoke(target);
+            Debug.Log($"[{gameObject.name}] attached parasite logs RADIUS EXITED object : {target.name} !");
+
         }
 
         private void OnDrawGizmos()

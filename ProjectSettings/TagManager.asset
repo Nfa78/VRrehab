@@ -25,6 +25,7 @@ TagManager:
   - Hoe
   - HandVisual
   - HandAnchor
+  - TSTag
   layers:
   - Default
   - TransparentFX
@@ -32,7 +33,7 @@ TagManager:
   - Overlay UI
   - Water
   - UI
-  - 
+  - Ground
   - 
   - 
   - 

@@ -1,8 +1,6 @@
 using UnityEngine;
 using System.Linq;
 using System.Collections.Generic;
-using UnityEditor.Localization.Plugins.XLIFF.V12;
-using UnityEditor.Localization.Plugins.XLIFF.V20;
 public class ReportCollisions : MonoBehaviour
 {
 

@@ -5,51 +5,29 @@ namespace TaskSystem
     [DisallowMultipleComponent]
     public sealed class RakedLeafProgressReporter : MonoBehaviour
     {
-        [SerializeField] private float minSuccessZ = 6.7f;
-        [SerializeField] private float maxSuccessZ = 7.8f;
         [SerializeField] private float progressDelta = 1f;
-        [SerializeField] private bool requireInsideBandBeforeCounting = true;
         [SerializeField] private bool logDebug;
 
         private RakeLeavesTaskDriver taskDriver;
-        private bool hasBeenInsideBand;
         private bool reported;
         private bool loggedMissingDriver;
 
         private void OnEnable()
         {
-            hasBeenInsideBand = IsInsideSuccessBand();
             ResolveTaskDriver();
         }
 
-        private void Update()
+        public bool ReportRaked()
         {
-            if (reported)
+            if (reported || !ResolveTaskDriver() || !taskDriver.IsRakeLeavesStepActive())
             {
-                return;
-            }
-
-            bool insideBand = IsInsideSuccessBand();
-            if (insideBand)
-            {
-                hasBeenInsideBand = true;
-                return;
-            }
-
-            if (requireInsideBandBeforeCounting && !hasBeenInsideBand)
-            {
-                return;
-            }
-
-            if (!ResolveTaskDriver() || !taskDriver.IsRakeLeavesStepActive())
-            {
-                return;
+                return false;
             }
 
             bool updated = taskDriver.RakeLeaves(this, progressDelta);
             if (!updated)
             {
-                return;
+                return false;
             }
 
             reported = true;
@@ -57,23 +35,16 @@ namespace TaskSystem
             if (logDebug)
             {
                 Debug.Log(
-                    $"[RakedLeafProgressReporter] Counted {name} as raked. z={transform.position.z:F2}, valid band={minSuccessZ:F2}-{maxSuccessZ:F2}.",
+                    $"[RakedLeafProgressReporter] Counted {name} as raked from hoe impulse.",
                     this);
             }
+
+            return true;
         }
 
-        public void Configure(float minZ, float maxZ, float delta)
+        public void Configure(float delta)
         {
-            minSuccessZ = Mathf.Min(minZ, maxZ);
-            maxSuccessZ = Mathf.Max(minZ, maxZ);
             progressDelta = Mathf.Max(0f, delta);
-            hasBeenInsideBand = IsInsideSuccessBand();
-        }
-
-        private bool IsInsideSuccessBand()
-        {
-            float z = transform.position.z;
-            return z >= minSuccessZ && z <= maxSuccessZ;
         }
 
         private bool ResolveTaskDriver()

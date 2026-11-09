@@ -423,6 +423,9 @@ namespace TaskSystem
 
             if (shader == null)
             {
+                Debug.LogWarning(
+                    "[ObjectiveHighlightRuntime] OutlineShader was not found. " +
+                    "Ensure the shader is included in Graphics Settings for the target build.");
                 return null;
             }
 

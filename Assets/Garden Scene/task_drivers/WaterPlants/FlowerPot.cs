@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using SoundSystem;
 using TaskSystem;
 using UnityEngine;
 
@@ -9,8 +10,11 @@ public class FlowerPot : MonoBehaviour
     [SerializeField] private WaterPlantsTaskDriver taskDriver;
     [SerializeField] private bool logWaterHits;
     [SerializeField] private float particleHitCooldown = 0.25f;
+    [SerializeField] private Color dryPlantColor = new Color(0.62f, 0.58f, 0.38f, 1f);
 
     private float nextAllowedHitTime;
+    private Renderer[] plantRenderers;
+    private Color[] defaultPlantColors;
     private readonly List<ColliderSizeState> colliderSizeStates = new List<ColliderSizeState>();
     private readonly List<ParticleCollisionEvent> collisionEvents = new List<ParticleCollisionEvent>(16);
 
@@ -30,10 +34,13 @@ public class FlowerPot : MonoBehaviour
             taskDriver = FindFirstObjectByType<WaterPlantsTaskDriver>();
         }
 
-        if (simObjectiveInteraction == null)
+        plantRenderers = GetComponentsInChildren<Renderer>(true);
+        defaultPlantColors = new Color[plantRenderers.Length];
+        for (int i = 0; i < plantRenderers.Length; i++)
         {
-            Debug.LogWarning("FlowerPot has no SimObjectiveInteraction assigned.", this);
+            defaultPlantColors[i] = plantRenderers[i].material.color;
         }
+        UpdatePlantColor();
 
         Collider ownCollider = GetComponent<Collider>();
         if (ownCollider == null)
@@ -78,16 +85,9 @@ public class FlowerPot : MonoBehaviour
         TryHandleWaterParticle(other);
     }
 
+    [System.Obsolete("Watering is scored from particle collisions.")]
     public void HandleWaterTrigger(WaterSpillTrigger waterTrigger, Collider hitCollider)
     {
-        if (!logWaterHits)
-        {
-            return;
-        }
-
-        Debug.Log(
-            $"[FlowerPot] Ignored deprecated trigger hit from {(waterTrigger != null ? waterTrigger.name : "null")} via {(hitCollider != null ? hitCollider.name : "null")}. Real watering now uses particle collisions.",
-            this);
     }
 
     private void TryHandleWaterParticle(GameObject other)
@@ -122,7 +122,7 @@ public class FlowerPot : MonoBehaviour
 
         nextAllowedHitTime = Time.time + particleHitCooldown;
 
-        if (taskDriver == null && simObjectiveInteraction == null)
+        if (taskDriver == null)
         {
             if (logWaterHits)
             {
@@ -132,15 +132,37 @@ public class FlowerPot : MonoBehaviour
             return;
         }
 
-        string targetStepId = simObjectiveInteraction != null ? simObjectiveInteraction.ObjectiveId : string.Empty;
-        bool updated = taskDriver != null
-            ? taskDriver.WaterPlant(targetStepId, particleHitCooldown)
-            : simObjectiveInteraction.AddObjectiveProgress(particleHitCooldown);
+        bool updated = taskDriver.WaterPlant(ObjectiveId, particleHitCooldown);
+        if (updated)
+        {
+            EventSoundManager.TryPlayAt("garden.water.plant_watered", transform.position);
+            UpdatePlantColor();
+        }
         if (logWaterHits)
         {
             Debug.Log(
                 $"[FlowerPot] Water particle hit from {other.name}. Water task update {(updated ? "succeeded" : "was rejected")}.",
                 this);
+        }
+    }
+
+    private void UpdatePlantColor()
+    {
+        if (taskDriver == null || plantRenderers == null)
+        {
+            return;
+        }
+
+        float target = taskDriver.GetWaterTarget(ObjectiveId);
+        float progress = taskDriver.GetWaterProgress(ObjectiveId);
+        float wateringAmount = target > 0f ? Mathf.Clamp01(progress / target) : 0f;
+
+        for (int i = 0; i < plantRenderers.Length; i++)
+        {
+            if (plantRenderers[i] != null)
+            {
+                plantRenderers[i].material.color = Color.Lerp(dryPlantColor, defaultPlantColors[i], wateringAmount);
+            }
         }
     }
 

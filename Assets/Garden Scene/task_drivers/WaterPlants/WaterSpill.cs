@@ -1,5 +1,6 @@
 using System.Linq;
 using Oculus.Interaction.HandGrab;
+using SoundSystem;
 using TaskSystem;
 using UnityEngine;
 
@@ -7,7 +8,6 @@ using UnityEngine;
 public class WaterSpill : MonoBehaviour
 {
     [SerializeField] private HandGrabInteractable handGrabInteractable;
-    [SerializeField] private SimObjectiveInteraction pickObjectiveInteraction;
     [SerializeField] private WaterPlantsTaskDriver taskDriver;
     [SerializeField] private WaterSpillSetup spillSetup;
     [Tooltip("Minimum watering-can movement speed in metres per second required to keep pouring.")]
@@ -50,11 +50,6 @@ public class WaterSpill : MonoBehaviour
         if (spillSetup == null)
         {
             spillSetup = gameObject.AddComponent<WaterSpillSetup>();
-        }
-
-        if (pickObjectiveInteraction == null)
-        {
-            pickObjectiveInteraction = GetComponent<SimObjectiveInteraction>();
         }
 
         if (taskDriver == null)
@@ -128,6 +123,7 @@ public class WaterSpill : MonoBehaviour
     private void StartSpilling()
     {
         isSpilling = true;
+        EventSoundManager.TryStartLoop("garden.water.pouring_loop");
 
         ParticleSystem waterParticles = spillSetup.WaterParticles;
         if (waterParticles == null)
@@ -156,6 +152,7 @@ public class WaterSpill : MonoBehaviour
         }
 
         isSpilling = false;
+        EventSoundManager.TryStopLoop("garden.water.pouring_loop");
 
         if (logSpillState)
         {
@@ -212,11 +209,11 @@ public class WaterSpill : MonoBehaviour
 
     private void HandleGrabStarted()
     {
+        EventSoundManager.TryPlayAt("garden.water.can_grabbed", transform.position);
+
         if (keepPickObjectiveSyncedToHoldState)
         {
-            bool setTrue = taskDriver != null
-                ? taskDriver.SetWaterCanHeld(true)
-                : pickObjectiveInteraction != null && pickObjectiveInteraction.SetObjectiveState(true);
+            bool setTrue = taskDriver != null && taskDriver.SetWaterCanHeld(true);
             if (logPickObjective)
             {
                 Debug.Log($"[WaterSpill] Grab started on {name}. Pick step sync {(setTrue ? "succeeded" : "was rejected")}.", this);
@@ -230,9 +227,7 @@ public class WaterSpill : MonoBehaviour
             return;
         }
 
-        bool completed = taskDriver != null
-            ? taskDriver.CompletePickStep()
-            : pickObjectiveInteraction != null && pickObjectiveInteraction.CompleteObjective();
+        bool completed = taskDriver != null && taskDriver.CompletePickStep();
         if (logPickObjective)
         {
             Debug.Log($"[WaterSpill] Grab started on {name}. Pick step completion {(completed ? "succeeded" : "was rejected")}.", this);
@@ -241,14 +236,14 @@ public class WaterSpill : MonoBehaviour
 
     private void HandleGrabReleased()
     {
+        EventSoundManager.TryStopLoop("garden.water.pouring_loop");
+
         if (!keepPickObjectiveSyncedToHoldState)
         {
             return;
         }
 
-        bool setFalse = taskDriver != null
-            ? taskDriver.SetWaterCanHeld(false)
-            : pickObjectiveInteraction != null && pickObjectiveInteraction.SetObjectiveState(false);
+        bool setFalse = taskDriver != null && taskDriver.SetWaterCanHeld(false);
         if (logPickObjective)
         {
             Debug.Log($"[WaterSpill] Grab released on {name}. Pick step release sync {(setFalse ? "succeeded" : "was rejected")}.", this);

@@ -156,7 +156,7 @@ public class WaterSpillSetup : MonoBehaviour
 
         var emission = waterParticles.emission;
         emission.enabled = true;
-        emission.rateOverTime = 95f;
+        emission.rateOverTime = 180f;
 
         var shape = waterParticles.shape;
         shape.enabled = true;

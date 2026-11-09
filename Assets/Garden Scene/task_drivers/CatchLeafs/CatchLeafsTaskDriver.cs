@@ -1,4 +1,5 @@
 using System;
+using SoundSystem;
 using UnityEngine;
 
 namespace TaskSystem
@@ -19,11 +20,30 @@ namespace TaskSystem
 
         [Header("Task Policy")]
         [SerializeField] private bool enforceTimeLimit = true;
+        private bool hasPlayedReturnSound;
 
         public override string TaskId => "catch_leafs";
         public string PickupStepId => pickupStepId;
         public string CatchStepId => catchStepId;
         public string ReturnStepId => returnStepId;
+
+        private void Update()
+        {
+            if (SimManager == null || SimTask == null || !SimManager.IsRunning)
+            {
+                hasPlayedReturnSound = false;
+                return;
+            }
+
+            SimTaskObjective returnObjective = SimTask.GetObjective(returnStepId);
+            if (hasPlayedReturnSound || returnObjective == null || !returnObjective.IsCompleted)
+            {
+                return;
+            }
+
+            hasPlayedReturnSound = true;
+            EventSoundManager.TryPlayAt("garden.bucket.returned", transform.position);
+        }
 
         private void Awake()
         {
@@ -65,19 +85,38 @@ namespace TaskSystem
             return IsActiveStep(pickupStepId) || IsActiveStep(catchStepId) || IsActiveStep(returnStepId);
         }
 
+        public bool IsStepActive(string stepId)
+        {
+            return !string.IsNullOrWhiteSpace(stepId) && IsActiveStep(stepId);
+        }
+
+        public bool IsTaskActive(string taskId)
+        {
+            return SimManager != null && SimManager.CurrentTask != null &&
+                   !string.IsNullOrWhiteSpace(taskId) &&
+                   string.Equals(SimManager.CurrentTask.TaskId, taskId, StringComparison.Ordinal);
+        }
+
         public bool IsPickupStepActive()
         {
-            return IsActiveStep(pickupStepId);
+            return IsStepActive(pickupStepId);
         }
 
         public bool IsCatchStepActive()
         {
-            return IsActiveStep(catchStepId);
+            return IsStepActive(catchStepId);
         }
 
         public bool IsReturnStepActive()
         {
-            return IsActiveStep(returnStepId);
+            return IsStepActive(returnStepId);
+        }
+
+        public bool IsReturnStepCompleted()
+        {
+            return SimTask != null &&
+                   !string.IsNullOrWhiteSpace(returnStepId) &&
+                   SimTask.GetObjective(returnStepId)?.IsCompleted == true;
         }
 
         public bool CompletePickupStep()
@@ -191,10 +230,12 @@ namespace TaskSystem
         private sealed class DifficultyProfile
         {
             public int level = 1;
-            [Min(0f)] public float timeLimitSeconds = 20f;
+            [Min(0f)] public float timeLimitSeconds = 60f;
             [Min(1f)] public float requiredCaughtLeaves = 5f;
             [Min(0f)] public float leafFallSpeed = 0.3f;
-            [Min(0f)] public float leafSwayAmount = 0.5f;
+            // Controls the falling leaves' X-axis sway amplitude. Keep the catch area
+            // focused enough for headset play without changing fall speed or depth drift.
+            [Min(0f)] public float leafSwayAmount = 0.25f;
             [Min(0f)] public float leafDepthAmount = 0.3f;
             [Min(0f)] public float leafRespawnDelaySeconds = 0.35f;
 

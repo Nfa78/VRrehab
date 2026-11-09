@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
+using SoundSystem;
 using TaskSystem;
 using UnityEngine;
 
@@ -13,13 +14,9 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     [SerializeField] private GrabInteractable bucketGrabInteractable;
     [SerializeField] private HandGrabInteractable handGrabInteractable;
     [SerializeField] private CatchLeafsTaskDriver taskDriver;
-    [SerializeField] private SimManager simManager;
+    [SerializeField, Min(0f)] private float returnInteractionBufferSeconds = 0.5f;
     [SerializeField] private Transform leavesRoot;
-
-    [Header("Task")]
-    [SerializeField] private string requiredTaskId = "catch_leafs";
-    [SerializeField] private string pickupObjectiveId = "pick_bucket";
-    [SerializeField] private string catchObjectiveId = "catch_leafs";
+    public GameObject DetectionSphere;
     [SerializeField] private string legacyLeafTaskId = "rake_leaves";
 
     [Header("Catch Volume")]
@@ -36,8 +33,14 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     private readonly List<LeafRuntime> leaves = new List<LeafRuntime>();
     private bool wereLeavesVisible;
     private bool wasGrabbedLastFrame;
+    private float returnInteractionLockUntil;
     private bool? bucketGrabComponentsEnabled;
     private string lastLoggedTaskId;
+    private Renderer[] detectionSphereRenderers;
+    private Color[] detectionSphereDefaultColors;
+    private float catchFeedbackRemaining;
+    private const float CatchFeedbackDurationSeconds = 1f;
+    private static readonly Color CatchFeedbackColor = new Color(0.1f, 1f, 0.2f, 1f);
 
     public event Action<bool> BucketGrabStateChanged;
     public event Action<LeafsFallingEffect, bool> LeafCatchProcessed;
@@ -71,18 +74,23 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     {
         ResolveReferences();
         CacheLeaves();
+        ResolveDetectionSphere();
         SetBucketGrabComponentsEnabled(false);
         SetLeavesActive(false, true);
+        SetDetectionSphereActive(false);
     }
 
     private void OnEnable()
     {
         ResolveReferences();
         CacheLeaves();
+        ResolveDetectionSphere();
         SubscribeToLeafEvents();
         SetBucketGrabComponentsEnabled(false);
         SetLeavesActive(false, true);
+        SetDetectionSphereActive(false);
         wasGrabbedLastFrame = false;
+        wereLeavesVisible = false;
     }
 
     private void OnDisable()
@@ -96,15 +104,41 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
     private void Update()
     {
         ResolveReferences();
-        CacheLeaves();
+        ResolveDetectionSphere();
+        TickCatchFeedback();
 
-        bool bucketCatchTaskActive = IsCurrentTask(requiredTaskId);
-        bool pickupStepActive = bucketCatchTaskActive && IsCurrentObjective(pickupObjectiveId);
-        bool catchStepActive = bucketCatchTaskActive && IsCurrentObjective(catchObjectiveId);
-        bool legacyLeafTaskActive = IsCurrentTask(legacyLeafTaskId);
+        if (taskDriver != null && taskDriver.IsReturnStepCompleted())
+        {
+            if (returnInteractionLockUntil <= 0f)
+            {
+                returnInteractionLockUntil = Time.time + Mathf.Max(0f, returnInteractionBufferSeconds);
+            }
 
+            SetBucketGrabComponentsEnabled(false);
+            wasGrabbedLastFrame = false;
+            return;
+        }
+
+        if (taskDriver == null || !taskDriver.IsTaskActive(taskDriver.TaskId))
+        {
+            returnInteractionLockUntil = 0f;
+        }
+
+        if (returnInteractionLockUntil > 0f && Time.time < returnInteractionLockUntil)
+        {
+            SetBucketGrabComponentsEnabled(false);
+            wasGrabbedLastFrame = false;
+            return;
+        }
+
+        returnInteractionLockUntil = 0f;
+        bool bucketCatchTaskActive = taskDriver != null && taskDriver.AllowsBucketCatchFlow();
+        bool pickupStepActive = taskDriver != null && taskDriver.IsPickupStepActive();
+        bool catchStepActive = taskDriver != null && taskDriver.IsCatchStepActive();
+        bool legacyLeafTaskActive = taskDriver != null && taskDriver.IsTaskActive(legacyLeafTaskId);
         SetBucketGrabComponentsEnabled(bucketCatchTaskActive);
         LogTaskGateState(bucketCatchTaskActive);
+        SetDetectionSphereActive(catchStepActive);
 
         bool leavesShouldBeVisible = catchStepActive || legacyLeafTaskActive;
         if (leavesShouldBeVisible != wereLeavesVisible)
@@ -123,11 +157,15 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
         if (isGrabbed != wasGrabbedLastFrame)
         {
             BucketGrabStateChanged?.Invoke(isGrabbed);
+            if (isGrabbed)
+            {
+                EventSoundManager.TryPlayAt("garden.bucket.grabbed", transform.position);
+            }
         }
 
         if (pickupStepActive && isGrabbed && !wasGrabbedLastFrame)
         {
-            bool completed = taskDriver != null && taskDriver.CompletePickupStep();
+            bool completed = taskDriver.CompletePickupStep();
             if (logDebug)
             {
                 Debug.Log(
@@ -167,11 +205,6 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
         if (taskDriver == null)
         {
             taskDriver = FindFirstObjectByType<CatchLeafsTaskDriver>();
-        }
-
-        if (simManager == null)
-        {
-            simManager = FindFirstObjectByType<SimManager>();
         }
 
         if (leavesRoot == null && autoFindLeavesRootByName)
@@ -216,8 +249,101 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
         if (logDebug)
         {
             Debug.Log(
-                $"[BucketLeafCatchSystem] Bucket grab components {(enabled ? "enabled" : "disabled")} for task '{requiredTaskId}'.",
+                $"[BucketLeafCatchSystem] Bucket grab components {(enabled ? "enabled" : "disabled")} for task '{(taskDriver != null ? taskDriver.TaskId : "<none>")}'.",
                 this);
+        }
+    }
+
+    private void ResolveDetectionSphere()
+    {
+        if (DetectionSphere == null)
+        {
+            Transform found = transform.Find("DetectionRadius");
+            if (found == null)
+            {
+                GameObject namedObject = GameObject.Find("DetectionRadius");
+                found = namedObject != null ? namedObject.transform : null;
+            }
+
+            DetectionSphere = found != null ? found.gameObject : null;
+        }
+
+        if (DetectionSphere == null || detectionSphereRenderers != null)
+        {
+            return;
+        }
+
+        detectionSphereRenderers = DetectionSphere.GetComponentsInChildren<Renderer>(true);
+        detectionSphereDefaultColors = new Color[detectionSphereRenderers.Length];
+        for (int i = 0; i < detectionSphereRenderers.Length; i++)
+        {
+            detectionSphereDefaultColors[i] = detectionSphereRenderers[i] != null
+                ? detectionSphereRenderers[i].material.color
+                : Color.white;
+        }
+    }
+
+    private void SetDetectionSphereActive(bool active)
+    {
+        if (DetectionSphere == null)
+        {
+            return;
+        }
+
+        if (DetectionSphere.activeSelf != active)
+        {
+            DetectionSphere.SetActive(active);
+        }
+
+        if (!active)
+        {
+            catchFeedbackRemaining = 0f;
+            RestoreDetectionSphereColors();
+        }
+    }
+
+    private void StartCatchFeedback()
+    {
+        catchFeedbackRemaining = CatchFeedbackDurationSeconds;
+    }
+
+    private void TickCatchFeedback()
+    {
+        if (catchFeedbackRemaining <= 0f || DetectionSphere == null || !DetectionSphere.activeSelf)
+        {
+            return;
+        }
+
+        catchFeedbackRemaining = Mathf.Max(0f, catchFeedbackRemaining - Time.deltaTime);
+        float pulse = Mathf.PingPong((CatchFeedbackDurationSeconds - catchFeedbackRemaining) * 8f, 1f);
+        for (int i = 0; i < detectionSphereRenderers.Length; i++)
+        {
+            Renderer renderer = detectionSphereRenderers[i];
+            if (renderer != null)
+            {
+                renderer.material.color = Color.Lerp(detectionSphereDefaultColors[i], CatchFeedbackColor, pulse);
+            }
+        }
+
+        if (catchFeedbackRemaining <= 0f)
+        {
+            RestoreDetectionSphereColors();
+        }
+    }
+
+    private void RestoreDetectionSphereColors()
+    {
+        if (detectionSphereRenderers == null || detectionSphereDefaultColors == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < detectionSphereRenderers.Length; i++)
+        {
+            if (detectionSphereRenderers[i] != null)
+            {
+                detectionSphereRenderers[i].material.color = detectionSphereDefaultColors[i];
+            }
         }
     }
 
@@ -228,9 +354,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
             return;
         }
 
-        string taskId = simManager != null && simManager.CurrentTask != null
-            ? simManager.CurrentTask.TaskId
-            : "<none>";
+        string taskId = taskDriver != null ? taskDriver.TaskId : "<none>";
         if (taskId == lastLoggedTaskId)
         {
             return;
@@ -302,11 +426,6 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
 
     private void ProcessLeafCatches()
     {
-        if (taskDriver == null)
-        {
-            return;
-        }
-
         Vector3 halfExtents = catchVolumeSizeLocal * 0.5f;
         for (int i = 0; i < leaves.Count; i++)
         {
@@ -325,10 +444,19 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
                 continue;
             }
 
-            bool counted = taskDriver.CatchLeaf();
+            bool counted = taskDriver != null && taskDriver.CatchLeaf();
             LeafCatchProcessed?.Invoke(leaf.Effect, counted);
+        if (counted)
+        {
+            EventSoundManager.TryPlayAt("garden.leaf.caught", leaf.Effect.transform.position);
+        }
             leaf.Effect.SetSimulationActive(false, true);
             leaf.ResumeAtTime = Time.time + Mathf.Max(0f, leafRespawnDelaySeconds);
+
+            if (counted)
+            {
+                StartCatchFeedback();
+            }
 
             if (logDebug)
             {
@@ -387,7 +515,7 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
 
     private void HandleLeafFellPastThreshold(LeafsFallingEffect effect)
     {
-        if (!IsCurrentTask(requiredTaskId) || !IsCurrentObjective(catchObjectiveId))
+        if (taskDriver == null || !taskDriver.IsCatchStepActive())
         {
             return;
         }
@@ -397,22 +525,6 @@ public sealed class BucketLeafCatchSystem : MonoBehaviour
         {
             LeafRespawned?.Invoke(effect);
         }
-    }
-
-    private bool IsCurrentTask(string taskId)
-    {
-        return simManager != null &&
-               simManager.CurrentTask != null &&
-               !string.IsNullOrWhiteSpace(taskId) &&
-               string.Equals(simManager.CurrentTask.TaskId, taskId, System.StringComparison.Ordinal);
-    }
-
-    private bool IsCurrentObjective(string objectiveId)
-    {
-        return simManager != null &&
-               simManager.CurrentObjective != null &&
-               !string.IsNullOrWhiteSpace(objectiveId) &&
-               string.Equals(simManager.CurrentObjective.ObjectiveId, objectiveId, System.StringComparison.Ordinal);
     }
 
     private void OnDrawGizmosSelected()

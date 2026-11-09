@@ -7,7 +7,13 @@ namespace TriggerSystem
     public sealed class TSManager : MonoBehaviour
     {
         private const string DefaultDetectTag = "HandAnchor";
+        private const string DefaultProcessingRootTag = TSParasite.ProcessingRootTag;
 
+        [Header("Scope")]
+        [Tooltip("Only colliders on this tag, or below an object with this tag, receive a TSParasite.")]
+        [SerializeField] private string processingRootTag = DefaultProcessingRootTag;
+
+        [Header("Detection")]
         [SerializeField] private List<string> detectTags = new List<string> { DefaultDetectTag };
         [SerializeField][Min(0f)] private float detectionRadius = 1.4f;
         [SerializeField][Min(0.05f)] private float targetRefreshInterval = 1.5f;
@@ -35,6 +41,11 @@ namespace TriggerSystem
                     continue;
                 }
 
+                if (!IsInProcessingScope(targetCollider.transform))
+                {
+                    continue;
+                }
+
                 if (skipDetectTagObjects && HasDetectTagInParents(targetCollider.transform))
                 {
                     continue;
@@ -44,6 +55,7 @@ namespace TriggerSystem
                     targetCollider.GetComponent<TSParasite>() ??
                     targetCollider.gameObject.AddComponent<TSParasite>();
 
+                parasite.ConfigureScope(true, processingRootTag);
                 parasite.Configure(detectTags, detectionRadius, targetRefreshInterval);
             }
         }
@@ -66,6 +78,26 @@ namespace TriggerSystem
             while (current != null)
             {
                 if (HasDetectTag(current.gameObject))
+                {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
+        }
+
+        private bool IsInProcessingScope(Transform current)
+        {
+            if (string.IsNullOrWhiteSpace(processingRootTag))
+            {
+                return true;
+            }
+
+            while (current != null)
+            {
+                if (string.Equals(current.tag, processingRootTag, StringComparison.Ordinal))
                 {
                     return true;
                 }

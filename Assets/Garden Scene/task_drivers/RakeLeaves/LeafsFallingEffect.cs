@@ -15,14 +15,12 @@ public class LeafsFallingEffect : MonoBehaviour
 
     [Header("Rake Progress")]
     public bool addRakeProgressReporterToPhysicsCopy = true;
-    public float rakedLeafMinZ = 6.7f;
-    public float rakedLeafMaxZ = 7.8f;
     public float rakedLeafProgressDelta = 1f;
 
     [Header("Rake Collision")]
     public bool addHoeImpulseToPhysicsCopy = true;
     public string hoeTag = "Hoe";
-    public float hoeCollisionImpulse = 0.18f;
+    public float hoeCollisionImpulse = 0.22f;
 
     [Header("Sway")]
     public float swayAmount = 1f;
@@ -249,7 +247,7 @@ public class LeafsFallingEffect : MonoBehaviour
             reporter = copy.AddComponent<RakedLeafProgressReporter>();
         }
 
-        reporter.Configure(rakedLeafMinZ, rakedLeafMaxZ, rakedLeafProgressDelta);
+        reporter.Configure(rakedLeafProgressDelta);
     }
 
     private void ConfigureHoeImpulse(GameObject copy)

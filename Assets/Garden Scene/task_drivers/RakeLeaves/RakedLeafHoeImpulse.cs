@@ -1,4 +1,5 @@
 using System;
+using SoundSystem;
 using UnityEngine;
 
 namespace TaskSystem
@@ -10,17 +11,21 @@ namespace TaskSystem
         public static event Action<RakedLeafHoeImpulse, float> AnyHoeImpulseApplied;
 
         [SerializeField] private string hoeTag = "Hoe";
-        [SerializeField] private float impulse = 0.18f;
+        [SerializeField] private float impulse = 0.22f;
         [SerializeField] private bool keepImpulseHorizontal = true;
         [SerializeField] private float minimumImpulseIntervalSeconds = 0.05f;
+        [SerializeField, Min(0.1f)] private float scaleDownDurationSeconds = 3f;
         [SerializeField] private bool logDebug;
 
         private Rigidbody leafRigidbody;
         private float lastImpulseTime = -999f;
+        private bool scaleDownStarted;
+        private Vector3 initialScale;
 
         private void Awake()
         {
             ResolveRigidbody();
+            initialScale = transform.localScale;
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -57,6 +62,11 @@ namespace TaskSystem
                 return;
             }
 
+            if (scaleDownStarted)
+            {
+                return;
+            }
+
             Vector3 direction = ResolvePushDirection(collision);
             if (direction.sqrMagnitude < 0.0001f)
             {
@@ -65,6 +75,12 @@ namespace TaskSystem
 
             leafRigidbody.AddForce(direction.normalized * impulse, ForceMode.Impulse);
             lastImpulseTime = Time.time;
+            scaleDownStarted = true;
+
+            RakedLeafProgressReporter reporter = GetComponent<RakedLeafProgressReporter>();
+            reporter?.ReportRaked();
+            EventSoundManager.TryPlayAt("garden.leaf.raked", transform.position);
+            StartCoroutine(ScaleDownAfterRake());
             AnyHoeImpulseApplied?.Invoke(this, impulse);
 
             if (logDebug)
@@ -72,6 +88,25 @@ namespace TaskSystem
                 Debug.Log(
                     $"[RakedLeafHoeImpulse] Applied hoe impulse to {name}. Direction={direction.normalized}, impulse={impulse:F2}.",
                     this);
+            }
+        }
+
+        private System.Collections.IEnumerator ScaleDownAfterRake()
+        {
+            float duration = Mathf.Max(0.1f, scaleDownDurationSeconds);
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                transform.localScale = Vector3.Lerp(initialScale, Vector3.zero, elapsed / duration);
+                yield return null;
+            }
+
+            transform.localScale = Vector3.zero;
+            if (leafRigidbody != null)
+            {
+                leafRigidbody.isKinematic = true;
+                leafRigidbody.detectCollisions = false;
             }
         }
 

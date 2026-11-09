@@ -1,4 +1,5 @@
 using System;
+using SoundSystem;
 using TriggerSystem;
 using UnityEngine;
 
@@ -27,6 +28,7 @@ namespace TaskSystem
         [SerializeField] [Min(0.01f)] private float firstPlantFastCompletionThresholdSeconds = 10f;
 
         private bool hasAdjustedDifficultyAfterFirstPlant;
+        private bool hasPlayedReturnSound;
 
         public override string TaskId => "water_plants";
         public string PickStepId => pickStepId;
@@ -49,24 +51,61 @@ namespace TaskSystem
         public override void OnTaskStarted()
         {
             hasAdjustedDifficultyAfterFirstPlant = false;
+            hasPlayedReturnSound = false;
             base.OnTaskStarted();
+        }
+
+        private void Update()
+        {
+            if (hasPlayedReturnSound || SimManager == null || SimTask == null || !SimManager.IsRunning)
+            {
+                return;
+            }
+
+            SimTaskObjective returnObjective = SimTask.GetObjective(returnStepId);
+            if (returnObjective == null || !returnObjective.IsCompleted)
+            {
+                return;
+            }
+
+            hasPlayedReturnSound = true;
+            EventSoundManager.TryPlayAt("garden.water.can_returned", ResolveReturnSoundPosition());
+        }
+
+        private Vector3 ResolveReturnSoundPosition()
+        {
+            if (waterSpills != null)
+            {
+                for (int i = 0; i < waterSpills.Length; i++)
+                {
+                    if (waterSpills[i] != null)
+                    {
+                        return waterSpills[i].transform.position;
+                    }
+                }
+            }
+
+            return transform.position;
         }
 
         public override void OnTaskStopped()
         {
             hasAdjustedDifficultyAfterFirstPlant = false;
+            hasPlayedReturnSound = false;
             base.OnTaskStopped();
         }
 
         public override void OnTaskCompleted()
         {
             hasAdjustedDifficultyAfterFirstPlant = false;
+            hasPlayedReturnSound = false;
             base.OnTaskCompleted();
         }
 
         public override void OnTaskFailed(string failureReason)
         {
             hasAdjustedDifficultyAfterFirstPlant = false;
+            hasPlayedReturnSound = false;
             base.OnTaskFailed(failureReason);
         }
 
@@ -172,6 +211,28 @@ namespace TaskSystem
             }
 
             return TryAddStepProgress(targetStepId, Mathf.Max(0.01f, wateringSeconds));
+        }
+
+        public float GetWaterProgress(string stepId)
+        {
+            if (SimTask == null || string.IsNullOrWhiteSpace(stepId))
+            {
+                return 0f;
+            }
+
+            SimTaskObjective objective = SimTask.GetObjective(stepId);
+            return objective != null ? objective.CurrentValue : 0f;
+        }
+
+        public float GetWaterTarget(string stepId)
+        {
+            if (SimTask == null || string.IsNullOrWhiteSpace(stepId))
+            {
+                return 0f;
+            }
+
+            SimTaskObjective objective = SimTask.GetObjective(stepId);
+            return objective != null ? objective.MaxValue : 0f;
         }
 
         public bool CompleteReturnStep()
@@ -330,7 +391,7 @@ namespace TaskSystem
         {
             public int level = 1;
             [Min(0f)] public float timeLimitSeconds = 10f;
-            [Min(0.25f)] public float requiredWateringSecondsPerPlant = 3f;
+            [Min(0.25f)] public float requiredWateringSecondsPerPlant = 5f;
             [Min(0.01f)] public float waterTriggerRadius = 0.2f;
             [Min(0.01f)] public float waterTriggerLength = 1f;
             [Min(0.01f)] public float plantHitboxScale = 1f;

@@ -27,8 +27,8 @@ MonoBehaviour:
     respectSimulationPause: 1
   - eventId: task.completed
     audioClips:
-    - {fileID: 8300000, guid: 7ba72b37a529fce4b8f669a438572c2c, type: 3}
-    volume: 0.75
+    - {fileID: 8300000, guid: 19dee5f8274e4264e83709184b12593b, type: 3}
+    volume: 0.5
     minPitch: 0.98
     maxPitch: 1.02
     spatialBlend: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
     respectSimulationPause: 1
   - eventId: sim.started
     audioClips:
-    - {fileID: 8300000, guid: 2c96591e495e2684ab1cc6670745fae4, type: 3}
+    - {fileID: 8300000, guid: 8cd1f35a3f6aa8f4eaf44ac7f30c801c, type: 3}
     volume: 0.55
     minPitch: 0.98
     maxPitch: 1.02
@@ -109,7 +109,8 @@ MonoBehaviour:
     outputMixerGroup: {fileID: 0}
     respectSimulationPause: 1
   - eventId: garden.water.plant_watered
-    audioClips: []
+    audioClips:
+    - {fileID: 8300000, guid: 2c96591e495e2684ab1cc6670745fae4, type: 3}
     volume: 0.45
     minPitch: 0.98
     maxPitch: 1.02
@@ -156,7 +157,8 @@ MonoBehaviour:
     outputMixerGroup: {fileID: 0}
     respectSimulationPause: 1
   - eventId: garden.seed.missed
-    audioClips: []
+    audioClips:
+    - {fileID: 8300000, guid: 2c96591e495e2684ab1cc6670745fae4, type: 3}
     volume: 0.5
     minPitch: 0.98
     maxPitch: 1.02
@@ -227,7 +229,8 @@ MonoBehaviour:
     outputMixerGroup: {fileID: 0}
     respectSimulationPause: 1
   - eventId: garden.rake.scrape
-    audioClips: []
+    audioClips:
+    - {fileID: 8300000, guid: b354357ef345f7446b207dc66d4ee44b, type: 3}
     volume: 0.35
     minPitch: 0.95
     maxPitch: 1.08
@@ -238,7 +241,8 @@ MonoBehaviour:
     outputMixerGroup: {fileID: 0}
     respectSimulationPause: 1
   - eventId: garden.leaf.raked
-    audioClips: []
+    audioClips:
+    - {fileID: 8300000, guid: 252642020e2d5fb459eaf00037149310, type: 3}
     volume: 0.45
     minPitch: 0.98
     maxPitch: 1.05

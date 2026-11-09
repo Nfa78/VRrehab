@@ -130,6 +130,7 @@ namespace TriggerSystem
                 return;
             }
 
+            triggerRadius.ConfigureScope(true, TSParasite.ProcessingRootTag);
             triggerRadius.Configure(acceptedObjectTags, detectionRadius, targetRefreshInterval);
         }
 
