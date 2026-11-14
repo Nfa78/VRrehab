@@ -27,6 +27,10 @@ namespace TaskSystem
         [SerializeField] private bool increaseDifficultyAfterFastFirstPlant = true;
         [SerializeField] [Min(0.01f)] private float firstPlantFastCompletionThresholdSeconds = 10f;
 
+        [Header("Task Completion Effects")]
+        [Tooltip("Optional override. If left empty, the Swipe component is resolved from the wp2 objective highlight target.")]
+        [SerializeField] private Swipe secondPlantSwipe;
+
         private bool hasAdjustedDifficultyAfterFirstPlant;
         private bool hasPlayedReturnSound;
 
@@ -99,6 +103,7 @@ namespace TaskSystem
         {
             hasAdjustedDifficultyAfterFirstPlant = false;
             hasPlayedReturnSound = false;
+            SlideSecondPlant();
             base.OnTaskCompleted();
         }
 
@@ -267,6 +272,31 @@ namespace TaskSystem
             ApplyDifficulty(nextDifficultyLevel);
         }
 
+        private void SlideSecondPlant()
+        {
+            Swipe swipe = secondPlantSwipe;
+            if (swipe == null)
+            {
+                SimTaskObjective secondPlantObjective = SimTask?.GetObjective(secondPlantStepId);
+                GameObject secondPlantTarget = secondPlantObjective?.HighlightTarget;
+                if (secondPlantTarget != null)
+                {
+                    swipe = secondPlantTarget.GetComponentInChildren<Swipe>(true);
+                    secondPlantSwipe = swipe;
+                }
+            }
+
+            if (swipe != null)
+            {
+                swipe.Slide();
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[WaterPlantsTaskDriver] Could not find a Swipe component on the '{secondPlantStepId}' objective target.",
+                this);
+        }
+
         private void ResolveDifficultyTargets()
         {
             if (!autoFindDifficultyTargets)
@@ -415,9 +445,12 @@ namespace TaskSystem
                     case 1:
                         return 2f;
                     case 2:
-                        return 1.3333334f;
+                        // Keep adaptive watering targets usable on Quest: at most a 20% reduction
+                        // from the level-1 hitbox scale of 2.0.
+                        return 1.6f;
                     default:
-                        return 1f;
+                        // Do not shrink beyond the 20% cap at higher difficulty levels either.
+                        return 1.6f;
                 }
             }
         }

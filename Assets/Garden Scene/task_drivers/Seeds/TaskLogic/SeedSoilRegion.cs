@@ -24,9 +24,26 @@ public sealed class SeedSoilRegion : MonoBehaviour
     public int AcceptedSeedCount => acceptedSeedCount;
     public bool IsFull => acceptedSeedCount >= capacity;
 
+    public bool TryGetWorldBounds(out Bounds bounds)
+    {
+        if (regionCollider == null)
+        {
+            regionCollider = GetComponent<Collider>();
+        }
+
+        if (regionCollider == null)
+        {
+            bounds = default;
+            return false;
+        }
+
+        bounds = regionCollider.bounds;
+        return true;
+    }
+
     public bool ContainsPoint(Vector3 point)
     {
-        return regionCollider != null && regionCollider.bounds.Contains(point);
+        return TryGetWorldBounds(out Bounds bounds) && bounds.Contains(point);
     }
 
     private void Awake()

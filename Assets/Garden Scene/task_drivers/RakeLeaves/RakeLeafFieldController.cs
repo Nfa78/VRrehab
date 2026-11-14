@@ -19,10 +19,11 @@ namespace TaskSystem
         [Header("Leaf Field")]
         [SerializeField, Min(1)] private int initialLeafCount = 12;
         [SerializeField] private Vector3 fieldCenter = new Vector3(-11.8f, 0.08f, 7.25f);
-        [SerializeField] private Vector2 fieldSize = new Vector2(2.2f, 1.5f);
+        [SerializeField] private Vector2 fieldSize = new Vector2(0.8f, 0.8f);
         [SerializeField, Min(0.1f)] private float leafVisualSpeed = 1.6f;
         [SerializeField, Range(0.1f, 1f)] private float rakeMovementMultiplier = 0.7f;
         [SerializeField, Min(0.1f)] private float maximumLeafSpeed = 1.1f;
+        [SerializeField, Min(0.1f)] private float rakedLeafScaleDownDurationSeconds = 3f;
 
         [Header("Pile")]
         [SerializeField] private Vector3 pileCenter = new Vector3(-11.8f, 0.08f, 7.85f);
@@ -32,6 +33,8 @@ namespace TaskSystem
         private readonly List<RakeableLeaf> spawnedLeaves = new List<RakeableLeaf>();
         private readonly List<GameObject> leafTemplates = new List<GameObject>();
         private readonly List<IgnoredCollision> ignoredHoeCollisions = new List<IgnoredCollision>();
+        private readonly List<LeafsFallingEffect> suppressedFallingLeaves = new List<LeafsFallingEffect>();
+        private readonly List<GameObject> suppressedPhysicsLeaves = new List<GameObject>();
         private SimManager simManager;
         private Transform runtimeRoot;
         private RakeSweepDetector sweepDetector;
@@ -69,6 +72,7 @@ namespace TaskSystem
 
             if (rakeTaskActive && !fieldVisible)
             {
+                SuppressLegacyLeafSystems();
                 CreateOrResetField();
                 IgnoreHoeObstacleCollisions();
                 SetFieldVisible(true);
@@ -111,25 +115,12 @@ namespace TaskSystem
                     continue;
                 }
 
-                leaf.Rake(direction, movementDistance, fieldBounds);
-                TryDepositLeaf(leaf);
+                if (leaf.Rake(direction, movementDistance, fieldBounds))
+                {
+                    leaf.BeginRakeCooldown(rakedLeafScaleDownDurationSeconds);
+                    taskDriver.RakeLeaves(1f);
+                }
             }
-        }
-
-        private void TryDepositLeaf(RakeableLeaf leaf)
-        {
-            Vector3 offset = leaf.PlannedPosition - pileCenter;
-            offset.y = 0f;
-            if (offset.sqrMagnitude > pileRadius * pileRadius)
-            {
-                return;
-            }
-
-            Vector2 randomOffset = Random.insideUnitCircle * pileSpread;
-            Vector3 pilePosition = pileCenter + new Vector3(randomOffset.x, depositedLeafCount * 0.002f, randomOffset.y);
-            leaf.MoveToPile(pilePosition);
-            depositedLeafCount++;
-            taskDriver.RakeLeaves(1f);
         }
 
         private void CreateOrResetField()
@@ -290,12 +281,73 @@ namespace TaskSystem
             if (!visible)
             {
                 RestoreHoeObstacleCollisions();
+                RestoreLegacyLeafSystems();
             }
 
             if (runtimeRoot != null)
             {
                 runtimeRoot.gameObject.SetActive(visible);
             }
+        }
+
+        private void SuppressLegacyLeafSystems()
+        {
+            suppressedFallingLeaves.Clear();
+            suppressedPhysicsLeaves.Clear();
+
+            LeafsFallingEffect[] fallingLeaves = FindObjectsByType<LeafsFallingEffect>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < fallingLeaves.Length; i++)
+            {
+                LeafsFallingEffect fallingLeaf = fallingLeaves[i];
+                if (fallingLeaf == null || !fallingLeaf.gameObject.activeSelf || !fallingLeaf.enabled)
+                {
+                    continue;
+                }
+
+                suppressedFallingLeaves.Add(fallingLeaf);
+                fallingLeaf.SetSimulationActive(false, true);
+            }
+
+            RakedLeafHoeImpulse[] physicsLeafComponents = FindObjectsByType<RakedLeafHoeImpulse>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < physicsLeafComponents.Length; i++)
+            {
+                RakedLeafHoeImpulse physicsLeaf = physicsLeafComponents[i];
+                if (physicsLeaf == null || !physicsLeaf.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                suppressedPhysicsLeaves.Add(physicsLeaf.gameObject);
+                physicsLeaf.gameObject.SetActive(false);
+            }
+        }
+
+        private void RestoreLegacyLeafSystems()
+        {
+            for (int i = 0; i < suppressedFallingLeaves.Count; i++)
+            {
+                LeafsFallingEffect fallingLeaf = suppressedFallingLeaves[i];
+                if (fallingLeaf != null)
+                {
+                    fallingLeaf.SetSimulationActive(true, true);
+                }
+            }
+
+            for (int i = 0; i < suppressedPhysicsLeaves.Count; i++)
+            {
+                GameObject physicsLeaf = suppressedPhysicsLeaves[i];
+                if (physicsLeaf != null)
+                {
+                    physicsLeaf.SetActive(true);
+                }
+            }
+
+            suppressedFallingLeaves.Clear();
+            suppressedPhysicsLeaves.Clear();
         }
 
         private void ClearRuntimeLeaves()

@@ -13,7 +13,7 @@ namespace TaskSystem
         [SerializeField] private Transform rakeRoot;
         [SerializeField] private RakeLeafFieldController fieldController;
         [SerializeField, Min(0.05f)] private float sweepWidth = 0.65f;
-        [SerializeField, Min(0.02f)] private float sweepDepth = 0.22f;
+        [SerializeField, Min(0.02f)] private float sweepDepth = 0.4f;
         [SerializeField, Min(0f)] private float minimumSweepSpeed = 0.18f;
 
         private Collider[] rakeColliders;

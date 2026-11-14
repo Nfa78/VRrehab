@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Oculus.Interaction;
+using Oculus.Interaction.HandGrab;
 using TaskSystem;
 using UnityEngine;
 
@@ -39,6 +41,7 @@ namespace TriggerSystem
         [SerializeField] private bool disableInteractablesOnReturn = true;
         [SerializeField] private bool makeRigidbodyKinematicOnReturn = true;
         [SerializeField] private bool clearRigidbodyVelocityOnReturn = true;
+        [SerializeField] private bool requireObjectReleasedBeforeReturn;
         [SerializeField] private List<string> interactableTypeNames = new List<string>
         {
             "Oculus.Interaction.GrabInteractable",
@@ -246,6 +249,11 @@ namespace TriggerSystem
             if (!objectiveCurrent)
             {
                 CaptureInitialObjectPoseIfMissing(returnedObject);
+                return false;
+            }
+
+            if (requireObjectReleasedBeforeReturn && IsObjectCurrentlyGrabbed(returnedObject))
+            {
                 return false;
             }
 
@@ -530,6 +538,54 @@ namespace TriggerSystem
                     $"[TSObjectiveReturnZone] {name} disabled {disabledCount} interactable component(s) on {returnedObject.name}.",
                     this);
             }
+        }
+
+        private bool IsObjectCurrentlyGrabbed(GameObject returnedObject)
+        {
+            if (returnedObject == null)
+            {
+                return false;
+            }
+
+            HandGrabInteractable[] handGrabInteractables =
+                returnedObject.GetComponentsInChildren<HandGrabInteractable>(true);
+            for (int i = 0; i < handGrabInteractables.Length; i++)
+            {
+                HandGrabInteractable interactable = handGrabInteractables[i];
+                if (interactable == null || interactable.Interactors == null)
+                {
+                    continue;
+                }
+
+                foreach (object candidate in interactable.Interactors)
+                {
+                    if (candidate is HandGrabInteractor handInteractor && handInteractor.IsGrabbing)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            GrabInteractable[] grabInteractables =
+                returnedObject.GetComponentsInChildren<GrabInteractable>(true);
+            for (int i = 0; i < grabInteractables.Length; i++)
+            {
+                GrabInteractable interactable = grabInteractables[i];
+                if (interactable == null || interactable.Interactors == null)
+                {
+                    continue;
+                }
+
+                foreach (object candidate in interactable.Interactors)
+                {
+                    if (candidate is GrabInteractor grabInteractor && grabInteractor.SelectedInteractable != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private bool IsConfiguredInteractable(Behaviour behaviour)

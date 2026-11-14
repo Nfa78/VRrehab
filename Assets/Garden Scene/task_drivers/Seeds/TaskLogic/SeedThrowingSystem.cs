@@ -379,14 +379,65 @@ public sealed class SeedThrowingSystem : MonoBehaviour
     {
         if (plantingArea.regions == null || plantingArea.regions.Length != 4)
             plantingArea.regions = new SeedSoilRegion[4];
+
         SeedSoilRegion[] found = FindObjectsByType<SeedSoilRegion>(FindObjectsSortMode.None);
+
+        // Derive the legacy 2x2 lookup bounds from the same colliders that accept seeds.
+        TryCalculatePlantingAreaBounds(found);
+
         for (int i = 0; i < found.Length; i++)
         {
             Vector3 p = found[i].transform.position;
+            if (found[i].TryGetWorldBounds(out Bounds regionBounds))
+            {
+                p = regionBounds.center;
+            }
+
             int column = p.x < (plantingArea.areaMinX + plantingArea.areaMaxX) * 0.5f ? 0 : 1;
             int row = p.z < (plantingArea.areaMinZ + plantingArea.areaMaxZ) * 0.5f ? 0 : 1;
             plantingArea.regions[row * 2 + column] ??= found[i];
         }
+    }
+
+    private bool TryCalculatePlantingAreaBounds(SeedSoilRegion[] regions)
+    {
+        if (regions == null || regions.Length == 0)
+        {
+            return false;
+        }
+
+        bool hasBounds = false;
+        Bounds combinedBounds = default;
+
+        for (int i = 0; i < regions.Length; i++)
+        {
+            SeedSoilRegion region = regions[i];
+            if (region == null || !region.TryGetWorldBounds(out Bounds regionBounds))
+            {
+                continue;
+            }
+
+            if (!hasBounds)
+            {
+                combinedBounds = regionBounds;
+                hasBounds = true;
+            }
+            else
+            {
+                combinedBounds.Encapsulate(regionBounds);
+            }
+        }
+
+        if (!hasBounds)
+        {
+            return false;
+        }
+
+        plantingArea.areaMinX = combinedBounds.min.x;
+        plantingArea.areaMaxX = combinedBounds.max.x;
+        plantingArea.areaMinZ = combinedBounds.min.z;
+        plantingArea.areaMaxZ = combinedBounds.max.z;
+        return true;
     }
 
     private SeedSoilRegion FindRegionAt(Vector3 point)
