@@ -1,4 +1,5 @@
 using System;
+using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 using SoundSystem;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace TaskSystem
 
         [Header("Hoe")]
         [SerializeField] private GameObject hoeObject;
+        [SerializeField] private GrabInteractable hoeGrabInteractable;
         [SerializeField] private HandGrabInteractable hoeHandGrabInteractable;
         [SerializeField] private Rigidbody hoeRigidbody;
         [SerializeField] private bool autoFindHoeByName = true;
@@ -69,6 +71,7 @@ namespace TaskSystem
         {
             ResolveHoeReferences();
             CaptureInitialHoePoseIfNeeded();
+            SetHoeInteractablesEnabled(false);
             EnsureTaskTracker();
             EnsureAdaptiveReporter();
             EnsureRakeLeafField();
@@ -78,9 +81,34 @@ namespace TaskSystem
         {
             ResolveHoeReferences();
             CaptureInitialHoePoseIfNeeded();
+            SetHoeInteractablesEnabled(false);
             EnsureTaskTracker();
             EnsureAdaptiveReporter();
             EnsureRakeLeafField();
+        }
+
+        public override void OnTaskStarted()
+        {
+            SetHoeInteractablesEnabled(true);
+            base.OnTaskStarted();
+        }
+
+        public override void OnTaskStopped()
+        {
+            SetHoeInteractablesEnabled(false);
+            base.OnTaskStopped();
+        }
+
+        public override void OnTaskCompleted()
+        {
+            SetHoeInteractablesEnabled(false);
+            base.OnTaskCompleted();
+        }
+
+        public override void OnTaskFailed(string failureReason)
+        {
+            SetHoeInteractablesEnabled(false);
+            base.OnTaskFailed(failureReason);
         }
 
         private void Update()
@@ -228,10 +256,36 @@ namespace TaskSystem
                                           hoeObject.GetComponentInChildren<HandGrabInteractable>(true);
             }
 
+            if (hoeGrabInteractable == null)
+            {
+                hoeGrabInteractable = hoeObject.GetComponent<GrabInteractable>() ??
+                                      hoeObject.GetComponentInChildren<GrabInteractable>(true);
+            }
+
             if (hoeRigidbody == null)
             {
                 hoeRigidbody = hoeObject.GetComponent<Rigidbody>() ??
                                hoeObject.GetComponentInChildren<Rigidbody>(true);
+            }
+        }
+
+        private void SetHoeInteractablesEnabled(bool enabled)
+        {
+            ResolveHoeReferences();
+
+            if (hoeGrabInteractable != null)
+            {
+                hoeGrabInteractable.enabled = enabled;
+            }
+
+            if (hoeHandGrabInteractable != null)
+            {
+                hoeHandGrabInteractable.enabled = enabled;
+            }
+
+            if (!enabled)
+            {
+                wasHoeGrabbedLastFrame = false;
             }
         }
 
