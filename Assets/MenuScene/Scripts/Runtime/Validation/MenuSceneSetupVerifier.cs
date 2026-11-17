@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using AdaptiveSystem.Api;
+using Oculus.Interaction;
+using Oculus.Interaction.Input;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -195,7 +197,7 @@ namespace VRStrokeRehab.MenuScene
 
         private void ApplyRuntimePointerSetupIfNeeded()
         {
-            if (!applyRuntimePointerSetup)
+            if (!applyRuntimePointerSetup || UsesPointableCanvasInput())
             {
                 return;
             }
@@ -425,6 +427,24 @@ namespace VRStrokeRehab.MenuScene
                 return;
             }
 
+            if (UsesPointableCanvasInput())
+            {
+                if (FindObjectsOfType<EventSystem>().Length != 1)
+                    issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, "EventSystem", "Hand UI requires one active EventSystem."));
+
+                foreach (var module in eventSystem.GetComponents<BaseInputModule>())
+                    if (module.isActiveAndEnabled && !(module is PointableCanvasModule))
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Warning, "EventSystem", "Disable the competing input module: " + module.GetType().Name));
+
+                var hasHandRay = false;
+                foreach (var ray in FindObjectsOfType<RayInteractor>(true))
+                    if (ray.GetComponent<HandRef>() != null)
+                        hasHandRay = true;
+                if (!hasHandRay)
+                    issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, "Hand UI", "No hand RayInteractor exists in the scene."));
+                return;
+            }
+
             var hasOvrInputModule = false;
             var ovrInputModule = eventSystem.GetComponent<OVRInputModule>();
             if (ovrInputModule != null)
@@ -436,7 +456,7 @@ namespace VRStrokeRehab.MenuScene
             var behaviours = eventSystem.GetComponents<MonoBehaviour>();
             for (var i = 0; i < behaviours.Length; i++)
             {
-                if (behaviours[i] == null)
+                if (behaviours[i] == null || !behaviours[i].isActiveAndEnabled)
                 {
                     continue;
                 }
@@ -596,8 +616,48 @@ namespace VRStrokeRehab.MenuScene
             return null;
         }
 
+        private bool UsesPointableCanvasInput()
+        {
+            var eventSystem = menuEventSystem != null ? menuEventSystem : EventSystem.current;
+            var module = eventSystem != null ? eventSystem.GetComponent<PointableCanvasModule>() : null;
+            return module != null && module.isActiveAndEnabled;
+        }
+
         private void ValidateCanvases(List<MenuValidationIssue> issues)
         {
+            if (UsesPointableCanvasInput())
+            {
+                var pointables = FindObjectsOfType<PointableCanvas>();
+                if (pointables.Length == 0)
+                    issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, "Hand UI", "No active PointableCanvas was found."));
+                foreach (var pointable in pointables)
+                {
+                    var canvas = pointable.Canvas;
+                    if (canvas == null)
+                    {
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, pointable.name, "Assign the menu Canvas to PointableCanvas."));
+                        continue;
+                    }
+                    var hasStandardRaycaster = false;
+                    foreach (var raycaster in canvas.GetComponents<GraphicRaycaster>())
+                        if (raycaster.isActiveAndEnabled && raycaster.GetType() == typeof(GraphicRaycaster))
+                            hasStandardRaycaster = true;
+                    if (!hasStandardRaycaster)
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, canvas.name, "Hand UI requires an active standard GraphicRaycaster."));
+                    if (canvas.renderMode != RenderMode.WorldSpace || canvas.worldCamera == null)
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, canvas.name, "Use a world-space Canvas with its event camera assigned."));
+                    var ray = pointable.GetComponent<RayInteractable>();
+                    if (ray == null || !ray.isActiveAndEnabled)
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Error, pointable.name, "An active RayInteractable must accompany PointableCanvas."));
+                    if (!pointable.transform.IsChildOf(canvas.transform))
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Warning, pointable.name, "Parent the interaction surface under its Canvas so it follows the menu."));
+                    var overlay = canvas.GetComponent<OVROverlayCanvas>();
+                    if (overlay != null && overlay.shape != OVROverlayCanvas.CanvasShape.Flat)
+                        issues.Add(new MenuValidationIssue(MenuValidationSeverity.Warning, canvas.name, "This hand UI surface is flat; set the overlay Shape to Flat."));
+                }
+                return;
+            }
+
             var canvases = FindObjectsOfType<Canvas>(true);
             if (canvases == null || canvases.Length == 0)
             {

@@ -18,6 +18,8 @@ namespace TaskSystem
         private static readonly int OutlineThicknessId = Shader.PropertyToID("_Outline_Thickness");
         private const string DefaultRadiusContactTargetTag = "HandAnchor";
         private static Material _sharedOutlineMaterial;
+        private static readonly Dictionary<Renderer, RendererOutlineState> SharedRendererStates =
+            new Dictionary<Renderer, RendererOutlineState>();
 
         [SerializeField] private Renderer[] targetRenderers;
         [SerializeField] private TSParasite[] targetParasites;
@@ -38,9 +40,10 @@ namespace TaskSystem
         private sealed class RendererOutlineState
         {
             public Renderer Renderer;
-            public Material[] OriginalSharedMaterials;
-            public int OutlineMaterialIndex;
-            public MaterialPropertyBlock PropertyBlock;
+            public int OutlineMaterialIndex = -1;
+            public readonly MaterialPropertyBlock PropertyBlock = new MaterialPropertyBlock();
+            public readonly List<Material> Materials = new List<Material>();
+            public readonly List<ObjectiveHighlightRuntime> Owners = new List<ObjectiveHighlightRuntime>();
         }
 
         public static void ApplyPulsingHighlight(
@@ -146,7 +149,11 @@ namespace TaskSystem
         {
             _mode = HighlightMode.None;
             enabled = false;
+            ReleaseRendererStates();
+        }
 
+        private void ReleaseRendererStates()
+        {
             for (int i = 0; i < _rendererStates.Count; i++)
             {
                 RendererOutlineState state = _rendererStates[i];
@@ -155,16 +162,16 @@ namespace TaskSystem
                     continue;
                 }
 
-                Renderer renderer = state.Renderer;
-                if (renderer == null)
+                state.Owners.Remove(this);
+                if (state.Owners.Count > 0)
                 {
                     continue;
                 }
 
-                renderer.SetPropertyBlock(null, state.OutlineMaterialIndex);
-                if (state.OriginalSharedMaterials != null)
+                SharedRendererStates.Remove(state.Renderer);
+                if (state.Renderer != null)
                 {
-                    renderer.sharedMaterials = state.OriginalSharedMaterials;
+                    RemoveOutlineMaterial(state);
                 }
             }
 
@@ -368,44 +375,76 @@ namespace TaskSystem
                 return;
             }
 
-            if (_rendererStates.Count > 0)
+            for (int i = 0; i < targetRenderers.Length; i++)
+            {
+                Renderer renderer = targetRenderers[i];
+                if (renderer == null || (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)))
+                {
+                    continue;
+                }
+
+                if (!SharedRendererStates.TryGetValue(renderer, out RendererOutlineState state))
+                {
+                    state = new RendererOutlineState { Renderer = renderer };
+                    SharedRendererStates.Add(renderer, state);
+                }
+
+                // Parent and child objectives can target the same renderer. They share one
+                // outline slot; the most recently configured owner supplies its appearance.
+                state.Owners.Remove(this);
+                state.Owners.Add(this);
+                if (!_rendererStates.Contains(state))
+                {
+                    _rendererStates.Add(state);
+                }
+
+                EnsureOutlineMaterialSlot(state, outlineMaterial);
+            }
+        }
+
+        private static bool EnsureOutlineMaterialSlot(RendererOutlineState state, Material outlineMaterial)
+        {
+            // Materials may have been replaced/reordered since the previous frame.
+            // Resolve by identity before every indexed property-block write.
+            state.Renderer.GetSharedMaterials(state.Materials);
+            state.OutlineMaterialIndex = state.Materials.IndexOf(outlineMaterial);
+            if (state.OutlineMaterialIndex >= 0)
+            {
+                return true;
+            }
+
+            if (state.Materials.Count == 0)
+            {
+                return false;
+            }
+
+            state.OutlineMaterialIndex = state.Materials.Count;
+            state.Materials.Add(outlineMaterial);
+            state.Renderer.SetSharedMaterials(state.Materials);
+            return true;
+        }
+
+        private static void RemoveOutlineMaterial(RendererOutlineState state)
+        {
+            state.Renderer.GetSharedMaterials(state.Materials);
+            int index = state.Materials.IndexOf(_sharedOutlineMaterial);
+            if (index < 0)
             {
                 return;
             }
 
-            for (int i = 0; i < targetRenderers.Length; i++)
+            // Preserve later material slots and their overrides if another system moved
+            // or appended materials. Never restore an old snapshot of the whole array.
+            for (int i = index; i < state.Materials.Count - 1; i++)
             {
-                Renderer renderer = targetRenderers[i];
-                if (renderer == null)
-                {
-                    continue;
-                }
-
-                Material[] original = renderer.sharedMaterials;
-                if (original == null || original.Length == 0)
-                {
-                    continue;
-                }
-
-                Material[] withOutline = new Material[original.Length + 1];
-                for (int m = 0; m < original.Length; m++)
-                {
-                    withOutline[m] = original[m];
-                }
-
-                int outlineIndex = withOutline.Length - 1;
-                withOutline[outlineIndex] = outlineMaterial;
-                renderer.sharedMaterials = withOutline;
-
-                RendererOutlineState state = new RendererOutlineState
-                {
-                    Renderer = renderer,
-                    OriginalSharedMaterials = original,
-                    OutlineMaterialIndex = outlineIndex,
-                    PropertyBlock = new MaterialPropertyBlock()
-                };
-                _rendererStates.Add(state);
+                state.PropertyBlock.Clear();
+                state.Renderer.GetPropertyBlock(state.PropertyBlock, i + 1);
+                state.Renderer.SetPropertyBlock(state.PropertyBlock.isEmpty ? null : state.PropertyBlock, i);
             }
+            state.Renderer.SetPropertyBlock(null, state.Materials.Count - 1);
+            state.Materials.RemoveAt(index);
+            state.Renderer.SetSharedMaterials(state.Materials);
+            state.OutlineMaterialIndex = -1;
         }
 
         private static Material GetOrCreateOutlineMaterial()
@@ -426,6 +465,13 @@ namespace TaskSystem
                 Debug.LogWarning(
                     "[ObjectiveHighlightRuntime] OutlineShader was not found. " +
                     "Ensure the shader is included in Graphics Settings for the target build.");
+                return null;
+            }
+
+            if (!shader.isSupported)
+            {
+                Debug.LogError("[ObjectiveHighlightRuntime] OutlineShader is unsupported on " +
+                    SystemInfo.graphicsDeviceType + ". Check the shader's Android build variants.");
                 return null;
             }
 
@@ -452,6 +498,12 @@ namespace TaskSystem
                     continue;
                 }
 
+                if (state.Owners.Count == 0 || state.Owners[state.Owners.Count - 1] != this ||
+                    !EnsureOutlineMaterialSlot(state, _sharedOutlineMaterial))
+                {
+                    continue;
+                }
+
                 state.PropertyBlock.Clear();
                 state.PropertyBlock.SetColor(OutlineColorId, color);
                 state.PropertyBlock.SetFloat(OutlineThicknessId, clampedThickness);
@@ -462,6 +514,19 @@ namespace TaskSystem
         private void OnDestroy()
         {
             ClearHighlight();
+        }
+
+        private void OnDisable()
+        {
+            ReleaseRendererStates();
+        }
+
+        private void OnEnable()
+        {
+            if (_mode != HighlightMode.None)
+            {
+                EnsureOutlineApplied();
+            }
         }
 
     }
